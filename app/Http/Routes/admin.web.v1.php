@@ -121,12 +121,14 @@ Route::group([
 
  ******************************************************************************/
 Route::group([
-    'prefix'        => 'admin/v1/shop',
+    'prefix'        => 'admin/v1/market',
     'namespace'     => 'Admin',
     'middleware'    => ['admin_wauth'],
 ], function () {
     // 商城列表
     Route::any('list',                       ['uses' => 'ShopController@shopList',                    'middleware' => 'admin_wauth.kol']);
+    // 商城列表
+    Route::any('name/list',                  ['uses' => 'ShopController@marketNameList',              'middleware' => 'admin_wauth.kol']);
 });
 
 /******************************************************************************

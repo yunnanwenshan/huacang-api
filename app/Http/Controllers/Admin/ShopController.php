@@ -52,4 +52,30 @@ class ShopController extends Controller
         }
         return response()->clientSuccess(['list' => $result, 'page' => $paginator->export()]);
     }
+
+    /**
+     * 商城列表
+     *
+     * @param Request $request [description]
+     *
+     * @return Response [description]
+     */
+    public function marketNameList(Request $request)
+    {
+        try {
+            $paginator = new Paginator($request);
+            $shares = Share::where('user_id', $this->user->id);
+            $shareCollection = $paginator->query($shares);
+            $rs = $shareCollection->map(function ($item) {
+                $e['share_id'] = $item->id;
+                $e['name'] = $item->name;
+                return $e;
+            });
+
+            $result = array_values($rs->toArray());
+        } catch (Exception $e) {
+            return response()->clientFail($e->getCode(), $e->getMessage());
+        }
+        return response()->clientSuccess(['shop_list' => $result]);
+    }
 }

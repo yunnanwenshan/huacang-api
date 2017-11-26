@@ -339,6 +339,7 @@ class AdminProductService implements AdminProductInterface
             $e['product_id'] = $item->id;
             $e['name'] = $item->name;
             $e['code'] = $item->code;
+            $e['class_id'] = $item->class_id;
             $e['cost_price'] = $item->cost_price;
             $e['supply_price'] = $item->supply_price;
             $e['selling_price'] = $item->selling_price;

@@ -64,15 +64,17 @@ class TemplateController extends Controller
             'page_index' => 'required|numeric',
             'page_size' => 'required|numeric',
             'start_time' => 'sometimes|string',
-            'end_time' => 'sometimes|string'
+            'end_time' => 'sometimes|string',
+            'name' => 'sometimes|string',
         ]);
 
         $startTime = $request->input('start_time', null);
         $endTime = $request->input('ent_time', null);
+        $name = $request->input('name', null);
 
         try {
             $paginator = new Paginator($request);
-            $result = $this->templateService->templateList($this->user, $paginator, $startTime, $endTime);
+            $result = $this->templateService->templateList($this->user, $paginator, $startTime, $endTime, $name);
         } catch (Exception $e) {
             return response()->clientFail($e->getCode(), $e->getMessage());
         }

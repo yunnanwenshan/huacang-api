@@ -79,25 +79,24 @@ class TemplateService implements TemplateInterface
     /**
      * 增加模版
      */
-    public function templateList(&$user, $paginator, $startTime, $endTime)
+    public function templateList(&$user, $paginator, $startTime, $endTime, $name)
     {
-        if (!empty($startTime) && !empty($endTime)) {
-            $sql = 'select `template`.`user_id`, `template`.`template_name`, `class`.`name` as `class_name`, `template`.`update_time`, `template_form_item`.`form_content` 
-from `template` inner join `class` on `template`.`class_id` = `class`.`id` inner join `template_form_item` on `template`.`id` = `template_form_item`.`template_id` where `template`.`user_id` = ? and `template`.`update_time` >= ? and `template`.`update_time` <= ? and `template`.`status` = ? order by `template`.`update_time` desc';
-            $templates = DB::select($sql, [$user->id, (new Carbon($startTime))->format('Y-m-d H:i:s'), (new Carbon($endTime))->format('Y-m-d H:i:s'), Template::STATUS_ENABLE]);
-        } else if (!empty($startTime)) {
-            $sql = 'select `template`.`user_id`, `template`.`template_name`, `class`.`name` as `class_name`, `template`.`update_time`, `template_form_item`.`form_content` 
-from `template` inner join `class` on `template`.`class_id` = `class`.`id` inner join `template_form_item` on `template`.`id` = `template_form_item`.`template_id` where `template`.`user_id` = ? and `template`.`update_time` >= ? and `template`.`status` = ? order by `template`.`update_time` desc';
-            $templates = DB::select($sql, [$user->id, (new Carbon($startTime))->format('Y-m-d H:i:s'), Template::STATUS_ENABLE]);
-        } else if (!empty($endTime)) {
-            $sql = 'select `template`.`user_id`, `template`.`template_name`, `class`.`name` as `class_name`, `template`.`update_time`, `template_form_item`.`form_content` 
-from `template` inner join `class` on `template`.`class_id` = `class`.`id` inner join `template_form_item` on `template`.`id` = `template_form_item`.`template_id` where `template`.`user_id` = ? and `template`.`update_time` <= ? and `template`.`status` = ? order by `template`.`update_time` desc';
-            $templates = DB::select($sql, [$user->id, (new Carbon($endTime))->format('Y-m-d H:i:s'), Template::STATUS_ENABLE]);
-        } else {
-            $sql = 'select `template`.`user_id`, `template`.`template_name`, `class`.`name` as `class_name`, `template`.`update_time`, `template_form_item`.`form_content` 
-from `template` inner join `class` on `template`.`class_id` = `class`.`id` inner join `template_form_item` on `template`.`id` = `template_form_item`.`template_id` where `template`.`user_id` = ? and `template`.`status` = ? order by `template`.`update_time` desc';
-            $templates = DB::select($sql, [$user->id, Template::STATUS_ENABLE]);
+        $sql = 'select `template`.`user_id`, `template`.`template_name`, `class`.`name` as `class_name`, `template`.`update_time`, `template_form_item`.`form_content` 
+from `template` inner join `class` on `template`.`class_id` = `class`.`id` inner join `template_form_item` on `template`.`id` = `template_form_item`.`template_id` where `template`.`user_id` = ? and `template`.`status` = ?';
+        if (!empty($startTime)) {
+            $sql = $sql . ' and `template`.`update_time` >= \'' . $startTime .  '\'';
         }
+
+        if (!empty($endTime)) {
+            $sql = $sql . ' and `template`.`update_time` <= \'' . $endTime . '\'';
+        }
+
+        if (!empty($name)) {
+            $sql = $sql . ' and `template`.`template_name` = \'' . $name . '\'';
+        }
+
+        $sql = $sql . ' order by `template`.`update_time` desc';
+        $templates = DB::select($sql, [$user->id, Template::STATUS_ENABLE]);
 
 //        $templates = Template::where('template.user_id', $user->id)
 //            ->join('class', 'template.class_id', '=', 'class.id')
@@ -118,7 +117,7 @@ from `template` inner join `class` on `template`.`class_id` = `class`.`id` inner
             $e['name'] = $item->template_name;
             $e['class_name'] = $item->class_name;
             $e['update_time'] = (new Carbon($item->update_time))->format('Y-m-d H:i:s');
-            $e['form_list'] = $item->form_content;
+            $e['form_list'] = json_decode($item->form_content, true);
             return $e;
         });
 

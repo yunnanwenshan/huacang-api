@@ -12,5 +12,5 @@ interface TemplateInterface
     /**
      * 增加模版
      */
-    public function templateList(&$user, $paginator, $startTime, $endTime);
+    public function templateList(&$user, $paginator, $startTime, $endTime, $name);
 }

@@ -339,7 +339,7 @@ class ProductController extends Controller
 
         try {
             $result = $this->productService->shareProduct($this->user, $param);
-            $result['url'] = '';
+            $result['url'] = 'http://www.baidu.com';
         } catch (Exception $e) {
             return response()->clientFail($e->getCode(), $e->getMessage());
         }

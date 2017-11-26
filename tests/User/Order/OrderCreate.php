@@ -47,7 +47,7 @@ class AddTemplateTest extends TestCase
 //            "supplier_id" => 32,
             "product_list" => [
                 [
-                    "cart_item_id" => 5,
+                    "cart_id" => 5,
                     "product_id" => 8,
                     "count" => 10,   //数量
 //                    "price" => 120, //单价

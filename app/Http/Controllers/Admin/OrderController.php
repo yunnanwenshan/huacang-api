@@ -88,14 +88,14 @@ class OrderController extends Controller
         $this->validate($request, [
             'page_index' => 'required|numeric|min:1',
             'page_size' => 'required|numeric|min:1',
-            'status' => 'required|numeric',
-            'start_time' => 'required|string',
-            'end_time' => 'required|string',
+            'status' => 'sometimes|numeric|in:0,1,2,3,4,5,6,7,8',
+            'start_time' => 'sometimes|string',
+            'end_time' => 'sometimes|string',
         ]);
 
-        $status = $request->input('status');
-        $startTime = $request->input('start_time');
-        $endTime = $request->input('end_time');
+        $status = $request->input('status', null);
+        $startTime = $request->input('start_time', null);
+        $endTime = $request->input('end_time', null);
 
         try {
             $paginator = new Paginator($request);

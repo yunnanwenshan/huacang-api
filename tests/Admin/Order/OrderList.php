@@ -41,7 +41,13 @@ class AddTemplateTest extends TestCase
 
         print_r($response->getBody()->getContents());
 
-        $request_body = [];
+        $request_body = [
+            'page_size' => 20,
+            'page_index' => 1,
+            'status' => 0,
+            'start_time' => '',
+            'end_time' => '',
+        ];
 
         $result = json_decode((string)$response->getBody(), true);
         print_r($result);
@@ -54,7 +60,7 @@ class AddTemplateTest extends TestCase
             'Server-Token' => $result['ticket'],
         ];
 
-        $response = $this->client->request('POST', self::$current_server . '/admin/v1/user/brands/list', [
+        $response = $this->client->request('POST', self::$current_server . '/admin/v1/order/detail/list', [
             'headers'           => $request_header,
             'allow_redirects'   => false,
             'json'              => $request_body,

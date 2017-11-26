@@ -13,7 +13,7 @@ interface AdminOrderInterface
     public function updateOrder(&$user, $orderId, $status, $remark);
 
     /**
-     * 更新订单
+     * 订单列表
      */
     public function orderList(&$user, Paginator $paginator, $startTime, $endTime, $status);
 }

@@ -6,9 +6,11 @@ namespace App\Services\Admin\Order;
 use App\Components\Paginator;
 use App\Exceptions\Admin\AdminOrderException\AdminOrderException;
 use App\Models\Order;
+use App\Models\User;
 use App\Services\Admin\Order\Contract\AdminOrderInterface;
 use Carbon\Carbon;
 use Log;
+use DB;
 
 class AdminOrderService implements AdminOrderInterface
 {
@@ -58,26 +60,38 @@ class AdminOrderService implements AdminOrderInterface
     }
 
     /**
-     * 更新订单
+     * 订单列表
      */
     public function orderList(&$user, Paginator $paginator, $startTime, $endTime, $status)
     {
-        if ($status == 0) {
-            $orders = Order::where('user_id', $user->id)
-                ->where('start_time', (new Carbon($startTime))->format('Y-m-d H:i:s'))
-                ->where('start_time', (new Carbon($endTime))->format('Y-m-d H:i:s'))
-                ->orderBy('start_time', 'desc');
-        } else {
-            $orders = Order::where('user_id', $user->id)
-                ->where('start_time', (new Carbon($startTime))->format('Y-m-d H:i:s'))
-                ->where('start_time', (new Carbon($endTime))->format('Y-m-d H:i:s'))
-                ->where('status', $status)
-                ->orderBy('start_time', 'desc');
+        $sql = 'select * from orders o where o.user_id = ?';
+        if (!empty($startTime)) {
+            $sql = $sql . ' and o.start_time >= \'' . (new Carbon($startTime))->format('Y-m-d H:i:s') . '\'';
         }
-
-        $ordercollection = $paginator->query($orders);
-        $rs = $ordercollection->map(function ($item){
-            return $item->export();
+        if (!empty($endTime)) {
+            $sql = $sql . ' and o.ent_time <= \'' . (new Carbon($endTime))->format('Y-m-d H:i:s') . '\'';
+        }
+        if (!empty($status)) {
+            $sql = $sql . ' and o.status = ' . $status;
+        }
+        $sql = $sql . ' order by o.start_time desc';
+        $orders = DB::select($sql, [$user->id]);
+        $ordercollection = $paginator->queryArray($orders);
+        $userList = User::where('id', $ordercollection->pluck('user_id')->toArray())->get();
+        $rs = $ordercollection->map(function ($item) use($userList) {
+            $user = $userList->where('id', $item->user_id)->first();
+            $e['order_sn'] = $item->sn;
+            $e['user_id'] = $user->id;
+            $e['user_name'] = $user->user_name;
+            $e['user_phone'] = $user->mobile;
+            $e['share_sn'] = $item->share_id;
+            $e['total_fee'] = $item->total_fee;
+            $e['status'] = $item->status;
+            $e['star_time'] = $item->start_time;
+            $e['end_time'] = $item->end_time;
+            $e['remark'] = $item->remark;
+            $e['product_list'] = json_decode($item->order_detail, true);
+            return $e;
         });
 
         Log::info(__FILE__ . '(' . __LINE__ . '), admin order list, ', [

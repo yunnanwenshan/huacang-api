@@ -99,7 +99,7 @@ class OrderService implements OrderInterface
             }
 
             //3.将用户需要购买的商品从购物车中清除
-            $cartItemdIds = array_pluck($productList, 'cart_item_id');
+            $cartItemdIds = array_pluck($productList, 'cart_id');
             $this->cartService->removeProductFromCart($user, $cartItemdIds);
 
             //4.订单创建

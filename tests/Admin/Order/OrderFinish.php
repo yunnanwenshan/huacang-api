@@ -41,7 +41,9 @@ class AddTemplateTest extends TestCase
 
         print_r($response->getBody()->getContents());
 
-        $request_body = [];
+        $request_body = [
+            'order_sn' => 'T17112537993062300002',
+        ];
 
         $result = json_decode((string)$response->getBody(), true);
         print_r($result);
@@ -54,7 +56,7 @@ class AddTemplateTest extends TestCase
             'Server-Token' => $result['ticket'],
         ];
 
-        $response = $this->client->request('POST', self::$current_server . '/admin/v1/market/name/list', [
+        $response = $this->client->request('POST', self::$current_server . '/admin/v1/order/finish', [
             'headers'           => $request_header,
             'allow_redirects'   => false,
             'json'              => $request_body,
@@ -65,7 +67,7 @@ class AddTemplateTest extends TestCase
             throw new Exception('request error');
         }
 
-//        print_r($response->gdetHeaders());
+//        print_r($response->getHeaders());
         print_r($response->getBody()->getContents());
     }
 }

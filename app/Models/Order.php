@@ -22,6 +22,18 @@ class Order extends Model
     const STATUS_CANCELED = 7;           //已取消
     const STATUS_CLIENT_REQUEST_CANCEL = 8; //客户申请取消
 
+    const STATUS_TO_DESC = [
+        self::STATUS_INIT => '已下单',
+        self::STATUS_PAY => '待支付',
+        self::STATUS_SEND_PRODUCT => '待发货',
+        self::STATUS_SENDED_PRODUCT => '已发货',
+        self::STATUS_AUDIT => '待审核',
+        self::STATUS_REFUND => '待退款',
+        self::STATUS_FINISHED => '已完成',
+        self::STATUS_FINISHED => '已取消',
+        self::STATUS_CLIENT_REQUEST_CANCEL => '客户申请取消',
+    ];
+
     public function export()
     {
         return [

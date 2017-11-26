@@ -17,46 +17,94 @@ class AdminOrderService implements AdminOrderInterface
     /**
      * 更新订单
      */
-    public function updateOrder(&$user, $orderId, $status, $remark)
+    public function updateOrder(&$user, $orderSn, $status, $remark)
     {
         Log::Info(__FILE__ . '(' . __LINE__ . '), update order start, ', [
             'user_id' => $user->id,
-            'order_id' => $orderId,
+            'order_id' => $orderSn,
             'status' => $status,
             'remark' => $remark,
         ]);
 
         $order = Order::where('user_id', $user->id)
-            ->where('id', $orderId)
+            ->where('sn', $orderSn)
             ->first();
         if (empty($order)) {
             Log::info(__FILE__ . '(' . __LINE__ . '), order is null, ', [
-                'order_id' => $orderId,
+                'order_id' => $orderSn,
                 'user_id' => $user->id,
                 'status' => $status,
             ]);
             throw new AdminOrderException(AdminOrderException::ORDER_NOT_EXIST, AdminOrderException::DEFAULT_CODE + 1);
         }
 
-        //检查订单状态
-        if (!in_array($order->status, [Order::STATUS_INIT, Order::STATUS_PAY])) {
-            Log::info(__FILE__ . '(' . __LINE__ . '), order status ', [
-                'order_id' => $orderId,
+        //订单已经被取消
+        if (in_array($order->status, [Order::STATUS_CANCELED])) {
+            Log::info(__FILE__ . '(' . __LINE__ . '), order canceled, ', [
                 'user_id' => $user->id,
+                'order_id' => $orderSn,
                 'status' => $status,
+                'remark' => $remark,
             ]);
-            throw new AdminOrderException(AdminOrderException::ORDER_NO_CANCEL, AdminOrderException::DEFAULT_CODE + 2);
+            throw new AdminOrderException(AdminOrderException::ORDER_CANCELED, AdminOrderException::DEFAULT_CODE + 3);
         }
 
-        $order->status = $status;
-        $order->save();
+        //订单已经完成
+        if ($order->status == Order::STATUS_FINISHED) {
+            throw new AdminOrderException(AdminOrderException::ORDER_FINISHED, AdminOrderException::DEFAULT_CODE + 4);
+        }
+
+        //用户已经申请取消订单
+
+
+        switch ($status) {
+            case Order::STATUS_CANCELED:
+                //检查订单状态
+                if (!in_array($order->status, [Order::STATUS_INIT, Order::STATUS_PAY, Order::STATUS_CLIENT_REQUEST_CANCEL])) {
+                    Log::info(__FILE__ . '(' . __LINE__ . '), order status ', [
+                        'order_id' => $orderSn,
+                        'user_id' => $user->id,
+                        'status' => $status,
+                    ]);
+                    throw new AdminOrderException(AdminOrderException::ORDER_NO_CANCEL, AdminOrderException::DEFAULT_CODE + 2);
+                }
+
+                break;
+            case Order::STATUS_FINISHED:
+                if ($order->status == Order::STATUS_CLIENT_REQUEST_CANCEL) {
+                    throw new AdminOrderException(AdminOrderException::ORDER_USER_REQUEST, AdminOrderException::DEFAULT_CODE + 7);
+                }
+                if (!in_array($order->status, [Order::STATUS_REFUND])) {
+                    throw new AdminOrderException(AdminOrderException::ORDER_NO_FINISHED . Order::STATUS_TO_DESC[$order->status],
+                        AdminOrderException::DEFAULT_CODE + 5);
+                }
+                break;
+            default:
+                Log::info(__FILE__ . '(' . __LINE__ . '), default update order, ', [
+                    'user_id' => $user->id,
+                    'order_id' => $orderSn,
+                    'status' => $status,
+                    'remark' => $remark,
+                ]);
+                throw new AdminOrderException(AdminOrderException::ORDER_ORTHER_OP, AdminOrderException::DEFAULT_CODE + 6);
+        }
+
+        $affectRow = Order::where('sn', $orderSn)
+            ->where('user_id', $user->id)
+            ->where('status', '!=', $status)
+            ->update(['status' => $status]);
 
         Log::info(__FILE__ . '(' . __LINE__ . '), update order successful, ', [
             'user_id' => $user->id,
-            'order_id' => $orderId,
+            'order_id' => $orderSn,
             'status' => $status,
             'remark' => $remark,
+            'affectRow' => $affectRow,
         ]);
+
+        return [
+            'order_sn' => $orderSn,
+        ];
     }
 
     /**

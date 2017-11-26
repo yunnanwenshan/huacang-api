@@ -121,6 +121,10 @@ class OrderService implements OrderInterface
                 'total_fee' => $totalFee,
                 'product_list' => $productList,
             ]);
+
+             return [
+                 'order_sn' => $order->sn,
+             ];
         } catch (\Exception $e) {
             DB::rollback();
             Log::error(__FILE__ . '(' . __LINE__ . '), create order fail, ', [

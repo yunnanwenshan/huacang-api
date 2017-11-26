@@ -10,7 +10,7 @@ interface AdminOrderInterface
     /**
      * 更新订单
      */
-    public function updateOrder(&$user, $orderId, $status, $remark);
+    public function updateOrder(&$user, $orderSn, $status, $remark);
 
     /**
      * 订单列表

@@ -32,21 +32,21 @@ class OrderController extends Controller
     public function Cancel(Request $request)
     {
         $this->validate($request, [
-            'order_id' => 'required|numeric|min:0',
+            'order_sn' => 'required|string',
             'remark' => 'sometimes|string',
         ]);
 
-        $orderId = $request->input('order_id');
+        $orderSn = $request->input('order_sn');
         $remark = $request->input('remark');
 
         try {
             $status = Order::STATUS_CANCELED;
-            $this->orderService->updateOrder($this->user, $orderId, $status, $remark);
+            $result = $this->orderService->updateOrder($this->user, $orderSn, $status, $remark);
         } catch (Exception $e) {
             return response()->clientFail($e->getCode(), $e->getMessage());
         }
 
-        return response()->clientSuccess();
+        return response()->clientSuccess($result);
     }
 
     /**
@@ -59,21 +59,21 @@ class OrderController extends Controller
     public function orderFinish(Request $request)
     {
         $this->validate($request, [
-            'order_id' => 'required|numeric|min:0',
+            'order_sn' => 'required|string',
             'remark' => 'sometimes|string',
         ]);
 
-        $orderId = $request->input('order_id');
+        $orderSn = $request->input('order_sn');
         $remark = $request->input('remark');
 
         try {
             $status = Order::STATUS_FINISHED;
-            $this->orderService->updateOrder($this->user, $orderId, $status, $remark);
+            $result = $this->orderService->updateOrder($this->user, $orderSn, $status, $remark);
         } catch (Exception $e) {
             return response()->clientFail($e->getCode(), $e->getMessage());
         }
 
-        return response()->clientSuccess();
+        return response()->clientSuccess($result);
     }
 
     /**

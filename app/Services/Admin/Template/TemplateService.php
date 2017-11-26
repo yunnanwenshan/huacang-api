@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin\Template;
 
+use App\Components\Paginator;
 use App\Exceptions\Admin\Template\TemplateException;
 use App\Models\ProductClass;
 use App\Models\Template;
@@ -79,7 +80,7 @@ class TemplateService implements TemplateInterface
     /**
      * 增加模版
      */
-    public function templateList(&$user, $paginator, $startTime, $endTime, $name)
+    public function templateList(&$user, Paginator $paginator, $startTime, $endTime, $name)
     {
         $sql = 'select `template`.`user_id`, `template`.`template_name`, `class`.`name` as `class_name`, `template`.`update_time`, `template_form_item`.`form_content` 
 from `template` inner join `class` on `template`.`class_id` = `class`.`id` inner join `template_form_item` on `template`.`id` = `template_form_item`.`template_id` where `template`.`user_id` = ? and `template`.`status` = ?';
@@ -112,6 +113,7 @@ from `template` inner join `class` on `template`.`class_id` = `class`.`id` inner
             return [];
         }
 
+        $templates = $paginator->queryArray($templates);
         $templates = new Collection($templates);
         $rs = $templates->map(function ($item) {
             $e['name'] = $item->template_name;

@@ -2,6 +2,8 @@
 namespace App\Services\Admin\Template\Contract;
 
 
+use App\Components\Paginator;
+
 interface TemplateInterface
 {
     /**
@@ -12,5 +14,5 @@ interface TemplateInterface
     /**
      * 增加模版
      */
-    public function templateList(&$user, $paginator, $startTime, $endTime, $name);
+    public function templateList(&$user, Paginator $paginator, $startTime, $endTime, $name);
 }

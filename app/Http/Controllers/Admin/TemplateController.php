@@ -79,7 +79,7 @@ class TemplateController extends Controller
             return response()->clientFail($e->getCode(), $e->getMessage());
         }
 
-        return response()->clientSuccess(['template_list' => $result]);
+        return response()->clientSuccess(['template_list' => $result, 'page' => $paginator->export()]);
     }
 
     /**

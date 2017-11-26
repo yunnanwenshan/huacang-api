@@ -37,6 +37,8 @@ class Paginator
     {
         $this->index = $request->get(self::INDEX, 1);
         $this->size  = $request->get(self::SIZE,  20);
+        $this->hasMore = 0;
+        $this->count = 0;
     }
 
     /**

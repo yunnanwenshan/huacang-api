@@ -42,14 +42,14 @@ class AuthTest extends TestCase
         print_r($response->getBody()->getContents());
 
         $request_body = [
-            "name" => "华为手机",
+            "name" => "华为手机test",
             "class_id" => 0, //产品分类（用户没找到自己的分类，就可自己填写一个）
-            "main_class_name" => '主分类名称',
-            "sub_class_name" =>  '二级分类名称',
+            "main_class_name" => '主分类名称test',
+            "sub_class_name" =>  '二级分类名称test',
             "type" => 1, //产品类形， 1 实物，2 虚拟
-            "code" => "1231",
-            "recommend" => "好", //推荐理由
-            "brands" => "华为", //产品品牌
+            "code" => "1231eee",
+            "recommend" => "好ddd", //推荐理由
+            "brands" => "华为dddtest--------sdsd", //产品品牌
             "valid_time" => "2017-12-05", //产品生效日期,如果状态是已上架，好这个就是上架上效时间
             "cost_price" => 43, //
             "supply_price" => 56,

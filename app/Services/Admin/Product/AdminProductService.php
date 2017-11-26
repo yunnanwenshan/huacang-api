@@ -35,21 +35,29 @@ class AdminProductService implements AdminProductInterface
         }
 
         //主分类
-        $class = new ProductClass();
-        $class->name = $productParam['main_class_name'];
-        $class->type = ProductClass::TYPE_PRODUCT;
-        $class->user_id = $user->id;
-        $class->save();
+        $class = ProductClass::where('name', $productParam['main_class_name'])->first();
+        if (empty($class)) {
+            $class = new ProductClass();
+            $class->name = $productParam['main_class_name'];
+            $class->type = ProductClass::TYPE_PRODUCT;
+            $class->user_id = $user->id;
+            $class->save();
+        }
 
         //二级分类
-        $secondClass = new ProductClass();
-        $secondClass->name = $productParam['sub_class_name'];
-        $secondClass->type = ProductClass::TYPE_PRODUCT;
-        $secondClass->user_id = $user->id;
-        $secondClass->parent_id = $class->id;
-        $secondClass->save();
+        $secondClass = ProductClass::where('parent_id', $class->id)
+            ->where('name', $productParam['sub_class_name'])
+            ->first();
+        if (empty($secondClass)) {
+            $secondClass = new ProductClass();
+            $secondClass->name = $productParam['sub_class_name'];
+            $secondClass->type = ProductClass::TYPE_PRODUCT;
+            $secondClass->user_id = $user->id;
+            $secondClass->parent_id = $class->id;
+            $secondClass->save();
+        }
 
-        return $class;
+        return $secondClass;
     }
 
     public function addProduct(&$user, array $productParam)
@@ -64,13 +72,12 @@ class AdminProductService implements AdminProductInterface
                         'user_id' => $user->id,
                         'product_param' => $productParam,
                     ]);
-
-                    throw new AdminProductException(AdminProductException::PRODUCT_PARAM_ERROR, AdminProductException::DEFAULT_CODE + 3);
-                }
-
-                $class = ProductClass::where('id', $productParam['class_id'])->first();
-                if (empty($class)) {
                     $class = $this->createClass($user, $productParam);
+                } else {
+                    $class = ProductClass::where('id', $productParam['class_id'])->first();
+                    if (empty($class)) {
+                        $class = $this->createClass($user, $productParam);
+                    }
                 }
             }
 
@@ -84,10 +91,13 @@ class AdminProductService implements AdminProductInterface
                 throw new AdminProductException(AdminProductException::PRODUCT_PARAM_ERROR, AdminProductException::DEFAULT_CODE + 4);
             }
 
-            $brands = new Brands();
-            $brands->user_id = $user->id;
-            $brands->brands = $productParam['brands'];
-            $brands->save();
+            $brands = Brands::where('user_id', $user->id)->where('brands', $productParam['brands'])->first();
+            if (empty($brands)) {
+                $brands = new Brands();
+                $brands->user_id = $user->id;
+                $brands->brands = $productParam['brands'];
+                $brands->save();
+            }
 
             //产品表
             $product = new Product();
@@ -96,7 +106,7 @@ class AdminProductService implements AdminProductInterface
             $product->class_id = $class->id;
             $product->brand_id = $brands->id;
             $product->code = $productParam['code'];
-            $product->brands = $productParam['brands'];
+            $product->brands = $brands->brands;
             $product->valid_time = (new Carbon($productParam['valid_time']));
             $product->main_img = $productParam['main_img'];
             $product->sub_img = json_encode($productParam['sub_img']);

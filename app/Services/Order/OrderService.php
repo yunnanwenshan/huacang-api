@@ -139,27 +139,47 @@ class OrderService implements OrderInterface
     /**
      * 申请取消订单
      */
-    public function requestCancel(&$user, $orderId, $remark)
+    public function requestCancel(&$user, $orderSn, $remark)
     {
         $order = Order::where('user_id', $user->id)
-            ->where('id', $orderId)
+            ->where('sn', $orderSn)
             ->first();
         if (empty($order)) {
             Log::error(__FILE__ . '(' . __LINE__ . '), order is null, ', [
                 'user_id' => $user->id,
-                'order_id' => $orderId,
+                'order_id' => $orderSn,
                 'remard' => $remark,
             ]);
             throw new OrderException(OrderException::ORDER_NOT_EXIST, OrderException::DEFAULT_CODE + 3);
         }
 
+        //订单已被取消
+        if ($order->status == Order::STATUS_CANCELED) {
+            throw new OrderException(OrderException::ORDER_CANCEL, OrderException::DEFAULT_CODE + 10);
+        }
+
+        //订单已完成
+        if ($order->status == Order::STATUS_FINISHED) {
+            throw new OrderException(OrderException::ORDER_FINISHED, OrderException::DEFAULT_CODE + 11);
+        }
+
         $affectRow = Order::where('user_id', $user->id)
-            ->where('id', $orderId)
+            ->where('sn', $orderSn)
+            ->whereIn('status', [Order::STATUS_INIT, Order::STATUS_PAY, Order::STATUS_SEND_PRODUCT, Order::STATUS_SENDED_PRODUCT, Order::STATUS_AUDIT, Order::STATUS_REFUND])
             ->update(['remark' => $remark, 'status' => Order::STATUS_CLIENT_REQUEST_CANCEL]);
+
+        if ($affectRow == 0) {
+            Log::info(__FILE__ . '(' . __LINE__ . '), request cancel successful, ', [
+                'user_id' => $user->id,
+                'order_id' => $orderSn,
+                'status' => $order->status,
+            ]);
+            throw new OrderException(OrderException::ORDER_NOT_ALLOWED_CANCEL, OrderException::DEFAULT_CODE + 12);
+        }
 
         Log::info(__FILE__ . '(' . __LINE__ . '), request cancel successful, ', [
             'user_id' => $user->id,
-            'order_id' => $orderId,
+            'order_id' => $orderSn,
             'affect_row' => $affectRow,
         ]);
     }

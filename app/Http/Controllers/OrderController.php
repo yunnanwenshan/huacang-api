@@ -124,13 +124,13 @@ class OrderController extends Controller
     public function requestCancel(Request $request)
     {
         $this->validate($request, [
-            'order_id' => 'required|numeric',
+            'order_sn' => 'required|string',
         ]);
 
-        $orderId = $request->input('order_id');
+        $orderSn = $request->input('order_sn');
         $remark = $request->input('remark', '');
         try {
-            $result = $this->orderService->requestCancel($this->user, $orderId, $remark);
+            $result = $this->orderService->requestCancel($this->user, $orderSn, $remark);
         } catch (Exception $e) {
             return response()->clientFail($e->getCode(), $e->getMessage());
         }

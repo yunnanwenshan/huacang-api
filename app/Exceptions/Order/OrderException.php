@@ -20,4 +20,7 @@ class OrderException extends \Exception
     const ORDER_PRODUCT_OFFLINE = '有部分商品已经下线'; // DEFAULT_CODE + 7
     const ORDER_PRODUCT_STOCK_INSUFFICIENT = '商品库存不足'; // DEFAULT_CODE + 8
     const ORDER_PRODUCT_STOCK_FAIL = '库存不足'; // DEFAULT_CODE + 9
+    const ORDER_CANCEL = '订单已被取消'; // DEFAULT_CODE + 10
+    const ORDER_FINISHED = '订单已完成'; // DEFAULT_CODE + 11
+    const ORDER_NOT_ALLOWED_CANCEL = '订单状态不允许操作， 订单已完成'; // DEFAULT_CODE + 12
 }

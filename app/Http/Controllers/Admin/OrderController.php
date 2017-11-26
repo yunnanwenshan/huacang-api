@@ -1,0 +1,109 @@
+<?php
+namespace App\Http\Controllers\Admin;
+
+use App\Components\Paginator;
+use App\Models\Order;
+use App\Services\Admin\Order\Contract\AdminOrderInterface;
+use Illuminate\Http\Request;
+use Exception;
+
+class OrderController extends Controller
+{
+    /**
+     * 构造函数，
+     *
+     * @param Request           $request  [description]
+     *
+     * @return not [description]
+     */
+    public function __construct(AdminOrderInterface $orderService, Request $request)
+    {
+        parent::__construct($request);
+        $this->orderService = $orderService;
+    }
+
+    /**
+     * 取消订单
+     *
+     * @param Request $request [description]
+     *
+     * @return Response [description]
+     */
+    public function Cancel(Request $request)
+    {
+        $this->validate($request, [
+            'order_id' => 'required|numeric|min:0',
+            'remark' => 'sometimes|string',
+        ]);
+
+        $orderId = $request->input('order_id');
+        $remark = $request->input('remark');
+
+        try {
+            $status = Order::STATUS_CANCELED;
+            $this->orderService->updateOrder($this->user, $orderId, $status, $remark);
+        } catch (Exception $e) {
+            return response()->clientFail($e->getCode(), $e->getMessage());
+        }
+
+        return response()->clientSuccess();
+    }
+
+    /**
+     * 订单完成
+     *
+     * @param Request $request [description]
+     *
+     * @return Response [description]
+     */
+    public function orderFinish(Request $request)
+    {
+        $this->validate($request, [
+            'order_id' => 'required|numeric|min:0',
+            'remark' => 'sometimes|string',
+        ]);
+
+        $orderId = $request->input('order_id');
+        $remark = $request->input('remark');
+
+        try {
+            $status = Order::STATUS_FINISHED;
+            $this->orderService->updateOrder($this->user, $orderId, $status, $remark);
+        } catch (Exception $e) {
+            return response()->clientFail($e->getCode(), $e->getMessage());
+        }
+
+        return response()->clientSuccess();
+    }
+
+    /**
+     * 订单列表
+     *
+     * @param Request $request [description]
+     *
+     * @return Response [description]
+     */
+    public function orderList(Request $request)
+    {
+        $this->validate($request, [
+            'page_index' => 'required|numeric|min:1',
+            'page_size' => 'required|numeric|min:1',
+            'status' => 'required|numeric',
+            'start_time' => 'required|string',
+            'end_time' => 'required|string',
+        ]);
+
+        $status = $request->input('status');
+        $startTime = $request->input('start_time');
+        $endTime = $request->input('end_time');
+
+        try {
+            $paginator = new Paginator($request);
+            $result = $this->orderService->orderList($this->user, $paginator, $startTime, $endTime, $status);
+        } catch (Exception $e) {
+            return response()->clientFail($e->getCode(), $e->getMessage());
+        }
+
+        return response()->clientSuccess(['order_list' => $result]);
+    }
+}

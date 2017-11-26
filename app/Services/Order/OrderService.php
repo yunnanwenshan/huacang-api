@@ -187,15 +187,15 @@ class OrderService implements OrderInterface
     /**
      * 订单详情
      */
-    public function detail(&$user, $orderId)
+    public function detail(&$user, $orderSn)
     {
         $order = Order::where('user_id', $user->id)
-            ->where('id', $orderId)
+            ->where('sn', $orderSn)
             ->first();
         if (empty($order)) {
             Log::error(__FILE__ . '(' . __LINE__ . '), order is null, ', [
                 'user_id' => $user->id,
-                'order_id' => $orderId,
+                'order_id' => $orderSn,
             ]);
             throw new OrderException(OrderException::ORDER_NOT_EXIST, OrderException::DEFAULT_CODE + 4);
         }
@@ -203,7 +203,7 @@ class OrderService implements OrderInterface
         $rs = $order->export();
         Log::Info(__FILE__ . '(' . __LINE__  .'), order detail, ', [
             'user_id' => $user->id,
-            'order_id' => $orderId,
+            'order_id' => $orderSn,
             'rs' => $rs,
         ]);
 
@@ -226,14 +226,15 @@ class OrderService implements OrderInterface
 
         //返回结果
         $rs = $orderCollection->map(function ($item) use($products) {
-            $product = $item->order_detail;
+            $product = json_decode($item->order_detail, true);
             $mainImgs = array_map(function ($pr) use($products) {
-                $pd = $products->where('id', $pr->product_id)->first();
-                $mainImg = empty($pd) ? "" : $pd->main_img;
+                $pd = $products->where('id', $pr['product_id'])->first();
+                $mainImg = empty($pd) ? "" : $pd['main_img'];
                 return $mainImg;
             }, $product);
             $e = $item->export();
             $e['product_list'] = $mainImgs;
+            return $e;
         });
 
         Log::info(__FILE__ . '(' . __LINE__ . '), order list, ', [

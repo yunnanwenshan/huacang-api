@@ -19,7 +19,7 @@ interface OrderInterface
     /**
      * 订单详情
      */
-    public function detail(&$user, $orderId);
+    public function detail(&$user, $orderSn);
 
     /**
      * 订单列表

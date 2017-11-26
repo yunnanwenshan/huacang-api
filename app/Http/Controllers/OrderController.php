@@ -78,11 +78,11 @@ class OrderController extends Controller
     public function detail(Request $request)
     {
         $this->validate($request, [
-            'order_id' => 'required|numeric'
+            'order_sn' => 'required|string'
         ]);
-        $orderId = $request->input('order_id');
+        $orderSn = $request->input('order_sn');
         try {
-            $result = $this->orderService->detail($this->user, $orderId);
+            $result = $this->orderService->detail($this->user, $orderSn);
         } catch (Exception $e) {
             return response()->clientFail($e->getCode(), $e->getMessage());
         }

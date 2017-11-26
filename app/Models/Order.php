@@ -41,10 +41,10 @@ class Order extends Model
             'share_id' => $this->share_id,
             'supplier_id' => $this->supplier_id,
             'total_fee' => $this->total_fee,
-            'product_list' => $this->order_detail,
+            'product_list' => json_decode($this->order_detail, true),
             'status' => $this->status,
             'start_time' => (new Carbon($this->start_time))->timestamp,
-            'end_time' => (new Carbon($this->end_time))->timestamp,
+            'end_time' => !strncmp($this->end_time, '0000-00-00 00:00:00', strlen('0000-00-00 00:00:00')) ? 0 :(new Carbon($this->end_time))->timestamp,
             'remark' => $this->remark,
         ];
     }

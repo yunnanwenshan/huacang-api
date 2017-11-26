@@ -10,6 +10,7 @@ use App\Services\Admin\Template\Contract\TemplateInterface;
 use Carbon\Carbon;
 use Exception;
 use DB;
+use Illuminate\Database\Eloquent\Collection;
 use Log;
 
 class TemplateService implements TemplateInterface
@@ -70,19 +71,39 @@ class TemplateService implements TemplateInterface
      */
     public function templateList(&$user, $paginator, $startTime, $endTime)
     {
-        $templates = Template::where('template.user_id', $user->id)
-            ->join('class', 'template.class_id', '=', 'class.id')
-            ->join('template_form_item', 'template.id', '=', 'template_form_item.template_id')
-            ->where('template.create_time', '>=', (new Carbon($startTime))->format('Y-m-d H:i:s'))
-            ->where('template.create_time', '<=', (new Carbon($endTime))->format('Y-m-d H:i:s'))
-            ->where('template.status', Template::STATUS_ENABLE)
-            ->select('template.user_id', 'template.template_name', 'class.name as class_name', 'template.update_time', 'template_form_item.form_content')
-            ->get();
+        if (!empty($startTime) && !empty($endTime)) {
+            $sql = 'select `template`.`user_id`, `template`.`template_name`, `class`.`name` as `class_name`, `template`.`update_time`, `template_form_item`.`form_content` 
+from `template` inner join `class` on `template`.`class_id` = `class`.`id` inner join `template_form_item` on `template`.`id` = `template_form_item`.`template_id` where `template`.`user_id` = ? and `template`.`update_time` >= ? and `template`.`update_time` <= ? and `template`.`status` = ? order by `template`.`update_time` desc';
+            $templates = DB::select($sql, [$user->id, (new Carbon($startTime))->format('Y-m-d H:i:s'), (new Carbon($endTime))->format('Y-m-d H:i:s'), Template::STATUS_ENABLE]);
+        } else if (!empty($startTime)) {
+            $sql = 'select `template`.`user_id`, `template`.`template_name`, `class`.`name` as `class_name`, `template`.`update_time`, `template_form_item`.`form_content` 
+from `template` inner join `class` on `template`.`class_id` = `class`.`id` inner join `template_form_item` on `template`.`id` = `template_form_item`.`template_id` where `template`.`user_id` = ? and `template`.`update_time` >= ? and `template`.`status` = ? order by `template`.`update_time` desc';
+            $templates = DB::select($sql, [$user->id, (new Carbon($startTime))->format('Y-m-d H:i:s'), Template::STATUS_ENABLE]);
+        } else if (!empty($endTime)) {
+            $sql = 'select `template`.`user_id`, `template`.`template_name`, `class`.`name` as `class_name`, `template`.`update_time`, `template_form_item`.`form_content` 
+from `template` inner join `class` on `template`.`class_id` = `class`.`id` inner join `template_form_item` on `template`.`id` = `template_form_item`.`template_id` where `template`.`user_id` = ? and `template`.`update_time` <= ? and `template`.`status` = ? order by `template`.`update_time` desc';
+            $templates = DB::select($sql, [$user->id, (new Carbon($endTime))->format('Y-m-d H:i:s'), Template::STATUS_ENABLE]);
+        } else {
+            $sql = 'select `template`.`user_id`, `template`.`template_name`, `class`.`name` as `class_name`, `template`.`update_time`, `template_form_item`.`form_content` 
+from `template` inner join `class` on `template`.`class_id` = `class`.`id` inner join `template_form_item` on `template`.`id` = `template_form_item`.`template_id` where `template`.`user_id` = ? and `template`.`status` = ? order by `template`.`update_time` desc';
+            $templates = DB::select($sql, [$user->id, Template::STATUS_ENABLE]);
+        }
+
+//        $templates = Template::where('template.user_id', $user->id)
+//            ->join('class', 'template.class_id', '=', 'class.id')
+//            ->join('template_form_item', 'template.id', '=', 'template_form_item.template_id')
+//            ->where('template.update_time', '>=', (new Carbon($startTime))->format('Y-m-d H:i:s'))
+//            ->where('template.update_time', '<=', (new Carbon($endTime))->format('Y-m-d H:i:s'))
+//            ->where('template.status', Template::STATUS_ENABLE)
+//            ->select('template.user_id', 'template.template_name', 'class.name as class_name', 'template.update_time', 'template_form_item.form_content')
+//            ->orderBy('template.update_time', 'desc')
+//            ->get();
 
         if (empty($templates)) {
             return [];
         }
 
+        $templates = new Collection($templates);
         $rs = $templates->map(function ($item) {
             $e['name'] = $item->template_name;
             $e['class_name'] = $item->class_name;

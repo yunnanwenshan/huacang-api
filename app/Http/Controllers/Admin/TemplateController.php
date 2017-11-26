@@ -64,12 +64,12 @@ class TemplateController extends Controller
         $this->validate($request, [
             'page_index' => 'required|numeric',
             'page_size' => 'required|numeric',
-            'start_time' => 'required|string',
-            'end_time' => 'required|string'
+            'start_time' => 'sometimes|string',
+            'end_time' => 'sometimes|string'
         ]);
 
-        $startTime = $request->input('start_time');
-        $endTime = $request->input('ent_time');
+        $startTime = $request->input('start_time', null);
+        $endTime = $request->input('ent_time', null);
 
         try {
             $paginator = new Paginator($request);

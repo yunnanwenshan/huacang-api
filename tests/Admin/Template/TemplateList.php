@@ -42,8 +42,8 @@ class AuthTest extends TestCase
         print_r($response->getBody()->getContents());
 
         $request_body = [
-            "start_time" => "2017-11-09",
-            "end_time" => "2017-12-18",
+//            "start_time" => "2017-11-09",
+//            "end_time" => "2017-12-18",
             "page_index" => 1,
             "page_size" => 10,
         ];

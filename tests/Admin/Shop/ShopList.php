@@ -41,7 +41,10 @@ class AddTemplateTest extends TestCase
 
         print_r($response->getBody()->getContents());
 
-        $request_body = [];
+        $request_body = [
+            'page_size' => 10,
+            'page_index' => 1,
+        ];
 
         $result = json_decode((string)$response->getBody(), true);
         print_r($result);

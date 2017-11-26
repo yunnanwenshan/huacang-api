@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Components\Paginator;
 use App\Models\Share;
 use Illuminate\Http\Request;
 use Exception;
@@ -30,10 +31,18 @@ class ShopController extends Controller
      */
     public function shopList(Request $request)
     {
+        $this->validate($request, [
+            'page_size' => 'required|numeric',
+            'page_index' => 'required|numeric',
+        ]);
+
         $user = $this->user;
+
         try {
-            $shares = Share::where('user_id', $user->id)->select(DB::raw('distinct name'))->get();
-            $rs = $shares->map(function ($item) {
+            $paginator = new Paginator($request);
+            $shares = Share::where('user_id', $user->id)->select(DB::raw('distinct name'));
+            $shareCollection = $paginator->query($shares);
+            $rs = $shareCollection->map(function ($item) {
                 return $item->name;
             });
 
@@ -41,6 +50,6 @@ class ShopController extends Controller
         } catch (Exception $e) {
             return response()->clientFail($e->getCode(), $e->getMessage());
         }
-        return response()->clientSuccess(['list' => $result]);
+        return response()->clientSuccess(['list' => $result, 'page' => $paginator->export()]);
     }
 }

@@ -24,27 +24,35 @@ class TemplateService implements TemplateInterface
             DB::begintransaction();
 
             //增加分类
-            $class = new ProductClass();
-            $class->name = $className;
-            $class->parent_id = 0;
-            $class->type = ProductClass::TYPE_TEMPLATE;
-            $class->user_id = $user->id;
-            $class->save();
+            $class = ProductClass::where('user_id', $user->id)->where('name', $className)->first();
+            if (empty($class)) {
+                $class = new ProductClass();
+                $class->name = $className;
+                $class->parent_id = 0;
+                $class->type = ProductClass::TYPE_TEMPLATE;
+                $class->user_id = $user->id;
+                $class->save();
+            }
 
             //增加模版信息
-            $template = new Template();
-            $template->template_name = $name;
-            $template->user_id = $user->id;
-            $template->class_id = $class->id;
-            $template->status = Template::STATUS_ENABLE;
-            $template->save();
+            $template = Template::where('user_id', $user->id)->where('template_name', $name)->first();
+            if (empty($template)) {
+                $template = new Template();
+                $template->template_name = $name;
+                $template->user_id = $user->id;
+                $template->class_id = $class->id;
+                $template->status = Template::STATUS_ENABLE;
+                $template->save();
 
-            //模版详情
-            $templateFormList = new TemplateFormItem();
-            $templateFormList->template_id = $template->id;
-            $templateFormList->form_name = $name;
-            $templateFormList->form_content = json_encode($formList);
-            $templateFormList->save();
+                //模版详情
+                $templateFormList = new TemplateFormItem();
+                $templateFormList->template_id = $template->id;
+                $templateFormList->form_name = $name;
+                $templateFormList->form_content = json_encode($formList);
+                $templateFormList->save();
+            }
+
+            DB::commit();
 
             Log::Info(__FILE__ . '(' . __LINE__ . '), add template successful, ', [
                 'user_id' => $user->id,
@@ -53,14 +61,16 @@ class TemplateService implements TemplateInterface
                 'form_list' => $formList,
             ]);
 
-            DB::commit();
+            return ['template_id' => $template->id];
         } catch (Exception $e) {
             DB::rollback();
-            Log::error(__FILE__ . '(' . __LINE__ . '), add template, ', [
+            Log::error(__FILE__ . '(' . __LINE__ . '), add template fail, ', [
                 'user_id' => $user->id,
                 'name' => $name,
                 'class_name' => $className,
                 'form_list' => $formList,
+                'code' => $e->getCode(),
+                'message' => $e->getMessage(),
             ]);
             throw new TemplateException(TemplateException::TEMPLATE_ADD_FAIL, TemplateException::DEFAULT_CODE + 1);
         }

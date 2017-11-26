@@ -43,13 +43,12 @@ class TemplateController extends Controller
         $formList = $request->input('form_list');
 
         try {
-            $this->templateService->addTemplate($this->user, $name, $className, $formList);
+            $rs = $this->templateService->addTemplate($this->user, $name, $className, $formList);
         } catch (Exception $e) {
             return response()->clientFail($e->getCode(), $e->getMessage());
         }
 
-        return response()->clientSuccess();
-
+        return response()->clientSuccess($rs);
     }
 
     /**

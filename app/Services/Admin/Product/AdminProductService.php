@@ -405,7 +405,7 @@ class AdminProductService implements AdminProductInterface
             'template_id' => $product->template_id,
             'user_id' => $user->id,
             'main_img' => $product->main_img,
-            'sub_img' => $product->sub_img,
+            'sub_img' => json_decode($product->sub_img, true),
         ];
     }
 

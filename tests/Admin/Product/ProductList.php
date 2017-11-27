@@ -44,8 +44,8 @@ class AuthTest extends TestCase
 
         $request_body = [
 //            "product_id" => "",
-//            "name" => "华为手机",
-            "class_id" => 15,
+            "name" => "华为手机",
+//            "class_id" => 15,
 //            "brands" => "华为",
 //            "status" => 3,
 //            "start_time" => "2017-11-05",

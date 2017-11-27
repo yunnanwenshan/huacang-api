@@ -109,8 +109,8 @@ class UploadController extends Controller
                 throw new Exception('图片格式错误, 支持jpeg, png, gif', 12);
             }
 
-            if ($_FILES["file"]["size"] <= 40000) {
-                throw new Exception('文件大小不超过1M', 13);
+            if ($_FILES["file"]["size"] > 4000) {
+                throw new Exception('文件大小不超过4M', 13);
             }
             Log::info('===========', ['file' => $file]);
             $result = $this->manager->saveFile($path, $content);

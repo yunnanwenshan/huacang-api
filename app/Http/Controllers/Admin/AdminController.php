@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\User\Contracts\UserAuthInterface;
 use Illuminate\Http\Request;
 use Exception;
+use Log;
 
 class AdminController extends Controller
 {

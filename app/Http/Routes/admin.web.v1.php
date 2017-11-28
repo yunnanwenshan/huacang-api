@@ -13,7 +13,7 @@ Route::group([
     // 用户登录
     Route::any('login',             ['uses' => 'AdminController@login',                 'middleware' => []]);
     // 用户详情
-    Route::any('detail',            ['uses' => 'AdminController@getUserInfo',           'middleware' => 'admin_wauth']);
+    Route::any('detail',            ['uses' => 'AdminController@getUserInfo',           'middleware' => 'admin_wauth.kol']);
 });
 
 

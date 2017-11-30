@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+
 class UserProduct extends Model
 {
     protected $table = 'user_product';
@@ -24,7 +26,7 @@ class UserProduct extends Model
             'selling_price' => $this->selling_price,
             'stock_num' => $this->stock_num,
             'min_sell_num' => $this->min_sell_num,
-            'update_time' => $this->update_time,
+            'update_time' => (new Carbon($this->update_time))->format('Y-m-d H:i:s'),
             'status' => $this->status,
             'recommend' => $this->recommend,
         ];

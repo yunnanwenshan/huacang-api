@@ -51,9 +51,9 @@ Route::group([
     'middleware' => ['wauth'],
 ], function () {
     // 产品列表
-    Route::any('share/list',          ['uses' => 'ProductController@productList',            'middleware' => 'wauth.kol']);
+    Route::any('share/list',          ['uses' => 'ProductController@productList',            'middleware' => []]);
     // 产品详情
-    Route::any('detail',              ['uses' => 'ProductController@productDetail',          'middleware' => 'wauth.kol']);
+    Route::any('detail',              ['uses' => 'ProductController@productDetail',          'middleware' => []]);
 });
 
 /******************************************************************************

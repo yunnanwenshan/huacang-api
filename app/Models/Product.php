@@ -20,7 +20,7 @@ class Product extends Model
             'template_id' => $this->template_id,
             'user_id' => $this->user_id,
             'main_img' => $this->main_img,
-            'sub_img' => $this->sub_img,
+            'sub_img' => json_decode($this->sub_img, true),
             'brands' => $this->brands,
         ];
     }

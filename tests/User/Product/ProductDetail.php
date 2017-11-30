@@ -43,8 +43,7 @@ class AddTemplateTest extends TestCase
 //        print_r($response->getHeaders());
 //
         $request_body = [
-            'page_size' => 20,
-            'page_index' => 1,
+            'product_id' => 4,
         ];
 //        $result = json_decode((string)$response->getBody(), true);
 //        print_r($result);
@@ -57,7 +56,7 @@ class AddTemplateTest extends TestCase
 //            'Server-Token' => $result['ticket'],
         ];
 
-        $response = $this->client->request('POST', self::$current_server . '/web/v1/order/list', [
+        $response = $this->client->request('POST', self::$current_server . '/web/v1/product/detail', [
             'headers'           => $request_header,
             'allow_redirects'   => false,
             'json'              => $request_body,

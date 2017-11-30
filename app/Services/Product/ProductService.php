@@ -39,7 +39,9 @@ class ProductService implements ProductInterface
             'rs' => $rs,
         ]);
 
-        return $rs;
+        return [
+            'product_list' => $rs->toArray(),
+        ];
     }
 
     /**
@@ -82,9 +84,7 @@ class ProductService implements ProductInterface
      */
     public function productDetail($productId)
     {
-        $product = Product::where('id', $productId)
-            ->where('status', Product::STATUS_ONLINE)
-            ->first();
+        $product = Product::where('id', $productId)->first();
         if (empty($product)) {
             Log::error(__FILE__ . '(' . __LINE__ . '), product is null, ', [
                 'product_id' => $productId,
@@ -92,10 +92,14 @@ class ProductService implements ProductInterface
             throw new ProductException(ProductException::PRODUCT_NOT_EXIST, ProductException::DEFAULT_CODE + 1);
         }
 
+        $userProduct = UserProduct::where('product_id', $product->id)->first();
+
         Log::info(__FILE__ . '(' . __LINE__ . '), product detail, ', [
             'product_id' => $productId,
         ]);
 
-        return $product->detail();
+        $productDetail = $product->export();
+
+        return array_merge($productDetail, $userProduct->export());
     }
 }

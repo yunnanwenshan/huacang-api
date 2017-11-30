@@ -8,6 +8,9 @@ use ClientRequest;
 use Illuminate\Http\Request;
 use Qiniu\Auth as QiniuAuth;
 use Log;
+use Qiniu\Config;
+use Qiniu\Storage\UploadManager;
+use Qiniu\Zone;
 
 class AdminServerController extends Controller
 {

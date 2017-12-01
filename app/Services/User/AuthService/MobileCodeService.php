@@ -6,81 +6,65 @@ use App\Exceptions\User\UserException;
 use App\Models\Code;
 use App\Services\User\AuthService\Contracts\MobileCodeInterface;
 use Carbon\Carbon;
+use GuzzleHttp\Client;
 use Log;
 use Exception;
 
 class MobileCodeService implements  MobileCodeInterface
 {
-
-    private function send($mobile, $code)
-    {
-        $sendUrl = 'http://v.juhe.cn/sms/send'; //短信接口的URL
-        $smsConf = array(
-            'key'   => 'e7b94e0f6810c701556c09abc59540fc', //您申请的APPKEY
-            'mobile'    => $mobile, //接受短信的用户手机号码
-            'tpl_id'    => '54005', //您申请的短信模板ID，根据实际情况修改
-            'tpl_value' =>'#code#='.$code.'&#m#=10' //您设置的模板变量，根据实际情况修改
-        );
-
-        $content = $this->juhecurl($sendUrl, $smsConf, 1); //请求发送短信
-
-        if($content){
-            $result = json_decode($content,true);
-            $error_code = $result['error_code'];
-            if($error_code == 0){
-                //状态为0，说明短信发送成功
-                echo "短信发送成功,短信ID：".$result['result']['sid'];
-            }else{
-                //状态非0，说明失败
-                $msg = $result['reason'];
-                echo "短信发送失败(".$error_code.")：".$msg;
-            }
-        }else{
-            //返回内容异常，以下可根据业务逻辑自行修改
-            echo "请求发送短信失败";
-        }
-    }
-
     /**
-     * 请求接口返回内容
-     * @param  string $url [请求的URL地址]
-     * @param  string $params [请求的参数]
-     * @param  int $ipost [是否采用POST形式]
-     * @return  string
+     * 聚合数据发送短信https://www.juhe.cn
+     *
+     * @author liutianping@ttyongche.com
+     *
+     * @param string       $mobile        [description]
+     * @param int          $type          [description]
+     *
+     * @return bool
      */
-    private function juhecurl($url, $params=false, $ispost=0){
-        $httpInfo = array();
-        $ch = curl_init();
-        $header = array('content-type:text/html;charset=utf-8');
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
-        curl_setopt($ch, CURLOPT_HTTP_VERSION , CURL_HTTP_VERSION_1_1 );
-        curl_setopt($ch, CURLOPT_USERAGENT , 'Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.22 (KHTML, like Gecko) Chrome/25.0.1364.172 Safari/537.22' );
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT , 30 );
-        curl_setopt($ch, CURLOPT_TIMEOUT , 30);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER , true );
+    private function sendSms($mobile, $code)
+    {
+        $urlConf = 'http://v.juhe.cn/sms/send?key=e7b94e0f6810c701556c09abc59540fc&mobile=%s&tpl_id=54005&tpl_value=%s';
+        $talValue = urlencode('#code#='.$code.'&#m#=10');
+        $url = sprintf($urlConf, $mobile, $talValue);
 
-        if($ispost) {
-            curl_setopt($ch , CURLOPT_POST , true );
-            curl_setopt($ch , CURLOPT_POSTFIELDS , $params );
-            curl_setopt($ch , CURLOPT_URL , $url );
-        } else {
-            if($params) {
-                curl_setopt( $ch , CURLOPT_URL , $url.'?'.$params );
-            } else {
-                curl_setopt( $ch , CURLOPT_URL , $url);
-            }
-        }
-
-        $response = curl_exec( $ch );
-        if ($response === FALSE) {
+        $client = new Client();
+        $response = $client->get($url);
+        if ($response->getStatusCode() != 200) {
+            Log::info(__FILE__ . '(' . __LINE__  .'), request sms server fail, ', [
+                'mobile' => $mobile,
+                'code' => $code,
+                'response' => $response,
+            ]);
             return false;
         }
 
-        $httpCode = curl_getinfo( $ch , CURLINFO_HTTP_CODE );
-        $httpInfo = array_merge( $httpInfo , curl_getinfo( $ch ) );
-        curl_close( $ch );
+        $result = json_decode((string)$response->getBody(), true);
+        if (json_last_error()) {
+            Log::info(__FILE__ . '(' . __LINE__ . '), send sms fail, parse json fail, ', [
+                'mobile' => $mobile,
+                'code' => $code,
+                'resposne' => $response,
+            ]);
+            return false;
+        }
 
-        return $response;
+        if ($result['error_code'] != 0) {
+            Log::info(__FILE__ . '(' . __LINE__ . '), send sms fail,', [
+                'mobile' => $mobile,
+                'code' => $code,
+                'result' => $result,
+            ]);
+            return false;
+        }
+
+        Log::info(__FILE__ . '(' . __LINE__ . '), send sms successful, ', [
+            'mobile' => $mobile,
+            'code' => $code,
+            'result' => $result,
+        ]);
+
+        return true;
     }
 
     /**
@@ -95,7 +79,6 @@ class MobileCodeService implements  MobileCodeInterface
      */
     public function sendCode($mobile)
     {
-
         $result = null;
         $msg = '验证码发送失败，请稍后重试';
 
@@ -118,13 +101,17 @@ class MobileCodeService implements  MobileCodeInterface
             $codeRecord->code_expired = with(Carbon::now())->addMinute(10);
             $codeRecord->save();
 
-            $res = $this->send($mobile, $code);
+            $res = $this->sendSms($mobile, $code);
 
             Log::info(__FILE__ . '(' . __LINE__ . '), send sms successful', [
                 'mobile' => $mobile,
                 'code'   => $code,
                 'res' => $res,
             ]);
+
+            if ($res == false) {
+                throw new Exception("send sms fail",1);
+            }
         } catch (Exception $e) {
             Log::info(__FILE__ . '(' . __LINE__ . '), send sns fail' , [
                 'mobile' => $mobile,
@@ -134,7 +121,9 @@ class MobileCodeService implements  MobileCodeInterface
             throw new UserException(UserException::AUTH_NET_FAIL, UserException::DEFAULT_CODE + 4);
         }
 
-        return ['msg' => $msg, 'sms_code' => $code];
+        return [
+            'msg' => 'success'
+        ];
     }
 
     /**

@@ -117,7 +117,7 @@ class UploadController extends Controller
             if ($result != true) {
                 throw new Exception('上传文件错误', 11);
             }
-            $rs['url'] = 'http://api.huacang.com:8888/uploads/'.$path;
+            $rs['url'] = '/uploads/'.$path;
         } catch (Exception $e) {
             return response()->clientFail($e->getCode(), $e->getMessage());
         }

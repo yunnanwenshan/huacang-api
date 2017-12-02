@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Components\Paginator;
 use App\Models\Share;
+use App\Models\ShareDetail;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Exception;
 use DB;
@@ -66,9 +68,15 @@ class ShopController extends Controller
             $paginator = new Paginator($request);
             $shares = Share::where('user_id', $this->user->id);
             $shareCollection = $paginator->query($shares);
-            $rs = $shareCollection->map(function ($item) {
+            $shareIds = $shareCollection->pluck('id');
+            $shareDetailCollection = ShareDetail::whereIn('share_id', $shareIds->toArray())->get();
+            $rs = $shareCollection->map(function ($item) use ($shareDetailCollection) {
                 $e['share_id'] = $item->id;
                 $e['name'] = $item->name;
+                $e['update_time'] = (new Carbon($item->update_time))->format('Y-m-d H:i:s');
+                $e['products'] = $shareDetailCollection->map(function ($it) {
+                    return $it->export();
+                });
                 return $e;
             });
 

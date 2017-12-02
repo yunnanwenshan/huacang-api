@@ -25,12 +25,20 @@ class ProductService implements ProductInterface
         $productIds = $shareDetailCollection->pluck('product_id');
         $products = Product::whereIn('id', $productIds)->get();
         $classIds = $products->pluck('class_id');
+        $userProducts = UserProduct::whereIn('product_id', $productIds)->get();
         $classCollection = ProductClass::whereIn('id', $classIds)->get();
-        $rs = $products->map(function ($item) use ($classCollection) {
+        $rs = $products->map(function ($item) use ($classCollection, $userProducts) {
             $class = $classCollection->where('id', $item->class_id)->first();
+            $userProduct = $userProducts->where('product_id', $item->id)->first();
             $className = empty($class) ? '' : $class->name;
             $e = $item->export();
             $e['class_name'] = $className;
+            $e['cost_price'] = $userProduct->cost_price;
+            $e['supply_price'] = $userProduct->supply_price;
+            $e['selling_price'] = $userProduct->selling_price;
+            $e['stock_num'] = $userProduct->stock_num;
+            $e['min_sell_num'] = $userProduct->min_sell_num;
+            $e['update_time'] = (new Carbon($userProduct->update_time))->format('Y-m-d H:i:s');
             return $e;
         });
 

@@ -70,8 +70,8 @@ class CartController extends Controller
         try {
             foreach ($productList as $item) {
                 $v = Validator::make($item, [
-                    'product_id' => 'required|numeric|min:1',
-                    'count' => 'required|numeric|min:1',
+                    'product_id' => 'required|numeric',
+                    'count' => 'required|numeric',
                 ]);
 
                 if ($v->fails()) {

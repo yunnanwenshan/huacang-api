@@ -33,9 +33,9 @@ class OrderController extends Controller
     public function create(Request $request)
     {
         $this->validate($request, [
-            'share_id' => 'required|numeric|min:1',
-//            'supplier_id' => 'required|numeric|min:1',
-//            'total_fee' => 'required|numeric|min:1',
+            'share_id' => 'required|numeric',
+//            'supplier_id' => 'required|numeric',
+//            'total_fee' => 'required|numeric',
             'product_list' => 'required|array',
         ]);
 
@@ -46,11 +46,11 @@ class OrderController extends Controller
         try {
             foreach ($productList as $item) {
                 $v = Validator::make($item, [
-                    'cart_id' => 'required|numeric|min:1',
-                    'product_id' => 'required|numeric|min:1',
-                    'count' => 'required|numeric|min:1',
-//                    'price' => 'required|numeric|min:1',
-//                    'fee' => 'required|numeric|min:1',
+                    'cart_id' => 'required|numeric',
+                    'product_id' => 'required|numeric',
+                    'count' => 'required|numeric',
+//                    'price' => 'required|numeric',
+//                    'fee' => 'required|numeric',
                 ]);
 
                 if ($v->fails()) {

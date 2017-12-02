@@ -109,7 +109,7 @@ class UploadController extends Controller
                 throw new Exception('图片格式错误, 支持jpeg, png, gif', 12);
             }
 
-            if ($_FILES["file"]["size"] > 1000) {
+            if ($_FILES["file"]["size"] > 1000000) {
                 throw new Exception('文件大小不超过4M', 13);
             }
             Log::info('===========', ['file' => $file]);

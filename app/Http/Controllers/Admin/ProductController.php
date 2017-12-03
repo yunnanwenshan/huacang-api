@@ -263,9 +263,9 @@ class ProductController extends Controller
         $this->validate($request, [
             'product_ids' => 'required|array',
         ]);
-        $productId= $request->input('product_id');
+        $productIds = $request->input('product_ids');
         try {
-            $result = $this->productService->productSellingUpBatch($this->user, $productId);
+            $result = $this->productService->productSellingUpBatch($this->user, $productIds);
         } catch (Exception $e) {
             return response()->clientFail($e->getCode(), $e->getMessage());
         }

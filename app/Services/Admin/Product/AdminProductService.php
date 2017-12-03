@@ -557,32 +557,37 @@ class AdminProductService implements AdminProductInterface
     {
         $userProductsCollection = $this->getUserProducts($user, $params);
 
-        $share = Share::where('name', $params['market_name'])->first();
+        $share = Share::where('user_id', $user->id)->first();
         if (!empty($share)) {
-            throw new ProductException(ProductException::PRODUCT_MARKET_NAME_EXISTED, ProductException::DEFAULT_CODE + 8);
+            $this->updateShop($user, $params);
+        } else {
+            $share = Share::where('name', $params['market_name'])->first();
+            if (!empty($share)) {
+                throw new ProductException(ProductException::PRODUCT_MARKET_NAME_EXISTED, ProductException::DEFAULT_CODE + 8);
+            }
+
+            //创建商城
+            $share = new Share();
+            $share->user_id = $user->id;
+            $share->name = $params['market_name'];
+            $share->url = ''; //TODO:是否想要写商城url地址
+            $share->save();
+
+            $userProducts = $userProductsCollection->toArray();
+            foreach ($userProducts as $product) {
+                $shareDetail = new ShareDetail();
+                $shareDetail->share_id = $share->id;
+                $shareDetail->product_id = $product['product_id'];
+                $shareDetail->cost_price = $product['cost_price'];
+                $shareDetail->supply_price = $product['supply_price'];
+                $shareDetail->save();
+            }
+
+            Log::info(__FILE__ . '(' . __LINE__ . '), create shop successful, ', [
+                'user_id' => $user->id,
+                'params' => $params,
+            ]);
         }
-
-        //创建商城
-        $share = new Share();
-        $share->user_id = $user->id;
-        $share->name = $params['market_name'];
-        $share->url = ''; //TODO:是否想要写商城url地址
-        $share->save();
-
-        $userProducts = $userProductsCollection->toArray();
-        foreach ($userProducts as $product) {
-            $shareDetail = new ShareDetail();
-            $shareDetail->share_id = $share->id;
-            $shareDetail->product_id = $product['product_id'];
-            $shareDetail->cost_price = $product['cost_price'];
-            $shareDetail->supply_price = $product['supply_price'];
-            $shareDetail->save();
-        }
-
-        Log::info(__FILE__ . '(' . __LINE__ . '), create shop successful, ', [
-            'user_id' => $user->id,
-            'params' => $params,
-        ]);
     }
 
     //更新商城

@@ -72,10 +72,25 @@ class ShopController extends Controller
             'page_index' => 'required|numeric',
         ]);
 
+        $shopName = $request->input('shop_name', null);
+        $startTime = $request->input('start_time,', null);
+        $endTime = $request->input('end_time', null);
+
         try {
             $paginator = new Paginator($request);
-            $shares = Share::where('user_id', $this->user->id);
-            $shareCollection = $paginator->query($shares);
+            $sql = 'select * from share where user_id = ' . $this->user->id;
+            if (!empty($shopName)) {
+                $sql = $sql . ' and name = \'' . $shopName . '\'';
+            }
+            if (!empty($startTime)) {
+                $sql = $sql . ' and update_time >= ' . $startTime;
+            }
+            if (!empty($endTime)) {
+                $sql = $sql . ' and update_time <= ' . $endTime;
+            }
+
+            $shops = DB::select($sql);
+            $shareCollection = $paginator->queryArray($shops);
             $shareIds = $shareCollection->pluck('id');
             $shareDetailCollection = ShareDetail::whereIn('share_id', $shareIds->toArray())->get();
             $productCollection = Product::whereIn('id', $shareDetailCollection->pluck('product_id')->toArray())->get();
@@ -83,12 +98,13 @@ class ShopController extends Controller
                 $e['share_id'] = $item->id;
                 $e['name'] = $item->name;
                 $e['update_time'] = (new Carbon($item->update_time))->format('Y-m-d H:i:s');
-                $e['products'] = $shareDetailCollection->map(function ($it) use ($productCollection) {
+                $shareDetail = $shareDetailCollection->where('share_id', $e['share_id']);
+                $e['products'] = array_values($shareDetail->map(function ($it) use ($productCollection) {
                     $e = $it->export();
                     $product = $productCollection->where('id', $it->product_id)->first();
                     $e['product_name'] = $product->name;
                     return $e;
-                });
+                })->toArray());
                 return $e;
             });
 

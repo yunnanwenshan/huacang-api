@@ -86,8 +86,8 @@ class OrderController extends Controller
     public function orderList(Request $request)
     {
         $this->validate($request, [
-            'page_index' => 'required|numeric|min:1',
-            'page_size' => 'required|numeric|min:1',
+            'page_index' => 'required|numeric',
+            'page_size' => 'required|numeric',
             'status' => 'sometimes|numeric|in:0,1,2,3,4,5,6,7,8',
             'start_time' => 'sometimes|string',
             'end_time' => 'sometimes|string',

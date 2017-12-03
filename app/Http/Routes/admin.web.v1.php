@@ -12,6 +12,8 @@ Route::group([
 ], function () {
     // 用户登录
     Route::any('login',             ['uses' => 'AdminController@login',                 'middleware' => []]);
+    // 后台注册
+    Route::any('register',          ['uses' => 'AdminController@registerLogin',         'middleware' => []]);
     // 用户详情
     Route::any('detail',            ['uses' => 'AdminController@getUserInfo',           'middleware' => 'admin_wauth.kol']);
 });
@@ -143,4 +145,19 @@ Route::group([
 ], function () {
     // 获取七牛云存储上传的key
     Route::any('upload_key',                       ['uses' => 'AdminServerController@getUploadKey']);
+});
+
+
+/******************************************************************************
+
+统计相关(/admin/v1/)
+
+ ******************************************************************************/
+Route::group([
+    'prefix'        => 'admin/v1',
+    'namespace'     => 'Admin',
+    'middleware'    => ['admin_wauth'],
+], function () {
+    // 商家用户列表
+    Route::any('client/list',                       ['uses' => 'AdminUserController@userList',          'middleware' => 'admin_wauth.kol']);
 });

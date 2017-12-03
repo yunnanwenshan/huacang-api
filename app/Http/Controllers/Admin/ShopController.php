@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Components\Paginator;
+use App\Models\Product;
 use App\Models\Share;
 use App\Models\ShareDetail;
 use Carbon\Carbon;
@@ -77,12 +78,16 @@ class ShopController extends Controller
             $shareCollection = $paginator->query($shares);
             $shareIds = $shareCollection->pluck('id');
             $shareDetailCollection = ShareDetail::whereIn('share_id', $shareIds->toArray())->get();
-            $rs = $shareCollection->map(function ($item) use ($shareDetailCollection) {
+            $productCollection = Product::whereIn('id', $shareDetailCollection->pluck('product_id')->toArray())->get();
+            $rs = $shareCollection->map(function ($item) use ($shareDetailCollection, $productCollection) {
                 $e['share_id'] = $item->id;
                 $e['name'] = $item->name;
                 $e['update_time'] = (new Carbon($item->update_time))->format('Y-m-d H:i:s');
-                $e['products'] = $shareDetailCollection->map(function ($it) {
-                    return $it->export();
+                $e['products'] = $shareDetailCollection->map(function ($it) use ($productCollection) {
+                    $e = $it->export();
+                    $product = $productCollection->where('id', $it->product_id)->first();
+                    $e['product_name'] = $product->name;
+                    return $e;
                 });
                 return $e;
             });

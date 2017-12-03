@@ -176,7 +176,6 @@ class ProductController extends Controller
     public function productList(Request $request)
     {
         $this->validate($request, [
-            'product_id' => 'numeric',
             'name' => 'string',
             'class_id' => 'numeric',
             'brands' => 'string',

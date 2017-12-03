@@ -12,4 +12,12 @@ class Template extends Model
     //状态
     const STATUS_ENABLE = 0; //有效
     const STATUS_DISABLE = 1; //无效
+
+    public function export()
+    {
+        return [
+            'template_id' => $this->id,
+            'template_name' => $this->template_name,
+        ];
+    }
 }

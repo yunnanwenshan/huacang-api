@@ -8,6 +8,8 @@ use App\Exceptions\Product\ProductException;
 use App\Models\Product;
 use App\Models\ProductClass;
 use App\Models\ShareDetail;
+use App\Models\Template;
+use App\Models\TemplateFormItem;
 use App\Models\UserProduct;
 use App\Services\Product\Contract\ProductInterface;
 use Carbon\Carbon;
@@ -101,12 +103,25 @@ class ProductService implements ProductInterface
         }
 
         $userProduct = UserProduct::where('product_id', $product->id)->first();
+        $template = Template::where('id', $product->template_id)->first();
+        $templateList = TemplateFormItem::where('template_id', $product->template_id)->get();
 
         Log::info(__FILE__ . '(' . __LINE__ . '), product detail, ', [
             'product_id' => $productId,
+            'template_id' => $product->template_id,
         ]);
 
-        $productDetail = $product->export();
+        if (!empty($template)) {
+            $templateDetail['template'] = $template->export();
+            $templateDetail['template']['template_item_list'] = $templateList->map(function ($item) {
+                return $item->export();
+            });
+            $productDetail = array_merge($templateDetail, $product->export());
+        } else {
+            $productDetail = $product->export();
+        }
+
+
 
         return array_merge($productDetail, $userProduct->export());
     }

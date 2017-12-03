@@ -48,7 +48,7 @@ class ProductController extends Controller
             'detail' => 'required|string',
             'sale_type' => 'required|in:1,2',
             'template_id' => 'required|numeric',
-            'main_img' => 'required|url',
+            'main_img' => 'required|string',
             'sub_img' => 'required|array',
         ]);
 

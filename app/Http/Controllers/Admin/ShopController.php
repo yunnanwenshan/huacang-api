@@ -31,7 +31,7 @@ class ShopController extends Controller
      *
      * @return Response [description]
      */
-    public function shopList(Request $request)
+    public function marketNameList(Request $request)
     {
         $this->validate($request, [
             'page_size' => 'required|numeric',
@@ -42,10 +42,12 @@ class ShopController extends Controller
 
         try {
             $paginator = new Paginator($request);
-            $shares = Share::where('user_id', $user->id)->select(DB::raw('distinct name'));
+            $shares = Share::where('user_id', $user->id);
             $shareCollection = $paginator->query($shares);
             $rs = $shareCollection->map(function ($item) {
-                return $item->name;
+                $e['share_id'] = $item->id;
+                $e['name'] = $item->name;
+                return $e;
             });
 
             $result = array_values($rs->toArray());
@@ -62,8 +64,13 @@ class ShopController extends Controller
      *
      * @return Response [description]
      */
-    public function marketNameList(Request $request)
+    public function shopList(Request $request)
     {
+        $this->validate($request, [
+            'page_size' => 'required|numeric',
+            'page_index' => 'required|numeric',
+        ]);
+
         try {
             $paginator = new Paginator($request);
             $shares = Share::where('user_id', $this->user->id);
@@ -84,6 +91,6 @@ class ShopController extends Controller
         } catch (Exception $e) {
             return response()->clientFail($e->getCode(), $e->getMessage());
         }
-        return response()->clientSuccess(['shop_list' => $result]);
+        return response()->clientSuccess(['page' => $paginator->export(), 'shop_list' => $result]);
     }
 }

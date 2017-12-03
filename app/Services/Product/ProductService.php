@@ -7,6 +7,7 @@ use App\Components\Paginator;
 use App\Exceptions\Product\ProductException;
 use App\Models\Product;
 use App\Models\ProductClass;
+use App\Models\Share;
 use App\Models\ShareDetail;
 use App\Models\Template;
 use App\Models\TemplateFormItem;
@@ -49,7 +50,10 @@ class ProductService implements ProductInterface
             'rs' => $rs,
         ]);
 
+        $share = Share::where('id', $shareId)->first();
+
         return [
+            'market_name' => $share->name,
             'product_list' => $rs->toArray(),
         ];
     }

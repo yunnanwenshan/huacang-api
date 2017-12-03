@@ -283,11 +283,11 @@ class ProductController extends Controller
     public function productSellingDownBatch(Request $request)
     {
         $this->validate($request, [
-            'product_id' => 'required|array',
+            'product_ids' => 'required|array',
         ]);
-        $productId= $request->input('product_id');
+        $productIds = $request->input('product_ids');
         try {
-            $result = $this->productService->productSellingDownBatch($this->user, $productId);
+            $result = $this->productService->productSellingDownBatch($this->user, $productIds);
         } catch (Exception $e) {
             return response()->clientFail($e->getCode(), $e->getMessage());
         }

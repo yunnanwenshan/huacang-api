@@ -21,10 +21,10 @@ class AddTemplateTest extends TestCase
     public function testUserLogin()
     {
         $request_body = [
-            'user_name' => 'testest',
-            'password' => '123456',
-            'mobile' => 15210353226,
-            'market_name' => '中国移动',
+            'user_name' => 'testest123',
+            'password' => '123456123',
+            'mobile' => 15210353227,
+            'market_name' => '中国移动9',
         ];
 
         $request_header = [

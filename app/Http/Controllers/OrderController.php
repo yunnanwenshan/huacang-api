@@ -42,7 +42,7 @@ class OrderController extends Controller
         try {
             foreach ($productList as $item) {
                 $v = Validator::make($item, [
-                    'product_id' => 'required|numeric',
+                    'user_product_id' => 'required|numeric',
                     'count' => 'required|numeric',
 //                    'price' => 'required|numeric',
 //                    'fee' => 'required|numeric',
@@ -86,7 +86,7 @@ class OrderController extends Controller
             foreach ($productList as $item) {
                 $v = Validator::make($item, [
                     'cart_id' => 'required|numeric',
-                    'product_id' => 'required|numeric',
+                    'user_product_id' => 'required|numeric',
                     'count' => 'required|numeric',
 //                    'price' => 'required|numeric',
 //                    'fee' => 'required|numeric',

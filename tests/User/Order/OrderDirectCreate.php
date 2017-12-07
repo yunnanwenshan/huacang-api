@@ -47,7 +47,7 @@ class AddTemplateTest extends TestCase
             "total_fee" => 120,
             "product_list" => [
                 [
-                    "product_id" => 4,
+                    "user_product_id" => 2,
                     "count" => 2,   //数量
 //                    "price" => 120, //单价
 //                    "fee" => 1200, //当前产品价格

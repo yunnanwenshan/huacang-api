@@ -59,13 +59,13 @@ class ProductController extends Controller
     public function productDetail(Request $request)
     {
         $this->validate($request, [
-            'product_id' => 'required|numeric',
+            'user_product_id' => 'required|numeric',
         ]);
 
-        $productId = $request->input('product_id');
+        $userProductId = $request->input('user_product_id');
 
         try {
-            $result = $this->productService->productDetail($productId);
+            $result = $this->productService->productDetail($userProductId);
         } catch (Exception $e) {
             return response()->clientFail($e->getCode(), $e->getMessage());
         }

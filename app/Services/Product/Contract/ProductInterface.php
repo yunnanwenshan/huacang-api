@@ -20,5 +20,5 @@ interface ProductInterface
     /**
      * 商品详情
      */
-    public function productDetail($productId);
+    public function productDetail($userProductId);
 }

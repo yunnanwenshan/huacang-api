@@ -32,22 +32,18 @@ class ProductService implements ProductInterface
             ->where('status', UserProduct::STATUS_ONLINE)
             ->get();
         $classCollection = ProductClass::whereIn('id', $classIds)->get();
-        $rs = $products->map(function ($item) use ($classCollection, $userProducts) {
+        $rs = [];
+        foreach ($products as $item) {
             $class = $classCollection->where('id', $item->class_id)->first();
             $userProduct = $userProducts->where('product_id', $item->id)->first();
             $className = empty($class) ? '' : $class->name;
             $e = $item->export();
             $e['class_name'] = $className;
-            return array_merge($e, $userProduct->export());
-
-//            $e['cost_price'] = $userProduct->cost_price;
-//            $e['supply_price'] = $userProduct->supply_price;
-//            $e['selling_price'] = $userProduct->selling_price;
-//            $e['stock_num'] = $userProduct->stock_num;
-//            $e['min_sell_num'] = $userProduct->min_sell_num;
-//            $e['update_time'] = (new Carbon($userProduct->update_time))->format('Y-m-d H:i:s');
-//            return $e;
-        });
+            if (empty($userProduct)) {
+                continue;
+            }
+            $rs[] = array_merge($e, $userProduct->export());
+        }
 
         Log::info(__FILE__ . '(' . __LINE__  .'), product list successful, ', [
             'share_id' => $shareId,
@@ -58,7 +54,7 @@ class ProductService implements ProductInterface
 
         return [
             'market_name' => $share->name,
-            'product_list' => $rs->toArray(),
+            'product_list' => $rs,
         ];
     }
 
@@ -72,25 +68,23 @@ class ProductService implements ProductInterface
         }
 
         $products = Product::whereIn('id', $productIds)->get();
-        $userProducts = UserProduct::whereIn('product_id', $productIds)->get();
+        $userProducts = UserProduct::whereIn('product_id', $productIds)
+            ->where('status', UserProduct::STATUS_ONLINE)
+            ->get();
         $classIds = $products->pluck('class_id');
         $classCollection = ProductClass::whereIn('id', $classIds)->get();
-        $productRs = $products->map(function ($item) use ($classCollection, $userProducts) {
+        $productRs = [];
+        foreach ($products as $item) {
             $class = $classCollection->where('id', $item->class_id)->first();
             $userProduct = $userProducts->where('product_id', $item->id)->first();
+            if (empty($userProduct)) {
+                continue;
+            }
             $e = $item->export();
             $className = empty($class) ? '' : $class->name;
             $e['class_name'] = $className;
-            return array_merge($e, $userProduct->export());
-//            $e['class_name'] = empty($class) ? '' : $class->name;
-//            $e['cost_price'] = $userProduct->cost_price;
-//            $e['supply_price'] = $userProduct->supply_price;
-//            $e['selling_price'] = $userProduct->selling_price;
-//            $e['stock_num'] = $userProduct->stock_num;
-//            $e['min_sell_num'] = $userProduct->min_sell_num;
-//            $e['update_time'] = (new Carbon($userProduct->update_time))->format('Y-m-d H:i:s');
-//            return $e;
-        })->toArray();
+            $productRs[] = array_merge($e, $userProduct->export());
+        }
 
         Log::info(__FILE__ . '(' . __LINE__ . '), product list, ', [
             'product_ids' => $productIds,
@@ -103,22 +97,34 @@ class ProductService implements ProductInterface
     /**
      * 商品详情
      */
-    public function productDetail($productId)
+    public function productDetail($userProductId)
     {
-        $product = Product::where('id', $productId)->first();
-        if (empty($product)) {
-            Log::error(__FILE__ . '(' . __LINE__ . '), product is null, ', [
-                'product_id' => $productId,
+        $userProduct = UserProduct::where('id', $userProductId)->first();
+        if (empty($userProduct)) {
+            Log::error(__FILE__ . '(' . __LINE__ . '), user product is null', [
+                'user_product_id' => $userProductId,
             ]);
             throw new ProductException(ProductException::PRODUCT_NOT_EXIST, ProductException::DEFAULT_CODE + 1);
         }
+        if (!in_array($userProduct->status, [UserProduct::STATUS_ONLINE])) {
+            Log::warning(__FILE__ . '(' . __LINE__ . '), user product not online, ', [
+                'user_product_id' => $userProductId
+            ]);
+            throw new ProductException(ProductException::PRODUCT_NO_ONLINE, ProductException::DEFAULT_CODE + 10);
+        }
+        $product = Product::where('id', $userProduct->product_id)->first();
+        if (empty($product)) {
+            Log::error(__FILE__ . '(' . __LINE__ . '), product is null, ', [
+                'product_id' => $userProduct->product_id,
+            ]);
+            throw new ProductException(ProductException::PRODUCT_NOT_EXIST, ProductException::DEFAULT_CODE + 9);
+        }
 
-        $userProduct = UserProduct::where('product_id', $product->id)->first();
         $template = Template::where('id', $product->template_id)->first();
         $templateList = TemplateFormItem::where('template_id', $product->template_id)->get();
 
         Log::info(__FILE__ . '(' . __LINE__ . '), product detail, ', [
-            'product_id' => $productId,
+            'user_product_id' => $userProductId,
             'template_id' => $product->template_id,
         ]);
 
@@ -131,8 +137,6 @@ class ProductService implements ProductInterface
         } else {
             $productDetail = $product->export();
         }
-
-
 
         return array_merge($productDetail, $userProduct->export());
     }

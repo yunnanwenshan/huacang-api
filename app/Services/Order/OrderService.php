@@ -42,7 +42,19 @@ class OrderService implements OrderInterface
         if (empty($share)) {
             throw new OrderException(OrderException::ORDER_MARKET_NOT_EXIST, OrderException::DEFAULT_CODE + 13);
         }
-        $productIds = array_pluck($productList, 'product_id');
+        $userProductIds = array_pluck($productList, 'user_product_id');
+        $userProducts = UserProduct::whereIn('id', $userProductIds)->where('status', UserProduct::STATUS_ONLINE)->get();
+        if ($count != $userProducts->count()) {
+            Log::info(__FILE__ . '(' . __LINE__ . '), there is a little the product offlining, ', [
+                'user_id' => $user->id,
+                'share_id' => $shareId,
+                'product_list' => $productList,
+                'user_products_count' => $userProducts->count(),
+                'count' => $count,
+            ]);
+            throw new OrderException(OrderException::ORDER_PRODUCT_OFFLINE, OrderException::DEFAULT_CODE + 7);
+        }
+        $productIds = $userProducts->pluck('product_id')->toArray();
         $shareDetailList = ShareDetail::where('share_id', $share->id)
             ->whereIn('product_id', $productIds)
             ->get();
@@ -57,25 +69,11 @@ class OrderService implements OrderInterface
             throw new OrderException(OrderException::ORDER_MARKET_NOT_GOOD, OrderException::DEFAULT_CODE + 14);
         }
 
-        $userProducts = UserProduct::where('product_id', $productIds)
-            ->where('status', UserProduct::STATUS_ONLINE)
-            ->get();
-        if ($count != $userProducts->count()) {
-            Log::info(__FILE__ . '(' . __LINE__ . '), there is a little the product offlining, ', [
-                'user_id' => $user->id,
-                'share_id' => $shareId,
-                'product_list' => $productList,
-                'user_products_count' => $userProducts->count(),
-                'count' => $count,
-            ]);
-            throw new OrderException(OrderException::ORDER_PRODUCT_OFFLINE, OrderException::DEFAULT_CODE + 7);
-        }
-
         //计算订单总价
         $realTotalFee = 0;
         $detail = array();
         foreach ($productList as $item) {
-            $product = $userProducts->where('product_id', $item['product_id'])->first();
+            $product = $userProducts->where('id', $item['user_product_id'])->first();
             //较验库存是否足够
             if ($item['count'] > $product->stock_num) {
                 Log::info(__FILE__ . '(' . __LINE__ . '), product stock_num insufficient, ', [
@@ -106,8 +104,8 @@ class OrderService implements OrderInterface
 
             //2.扣减库存, TODO:多用户并发扣减库存可能会失败
             foreach ($productList as $item) {
-                $product = $userProducts->where('product_id', $item['product_id'])->first();
-                $affectRow = UserProduct::where('product_id', $product->product_id)
+                $product = $userProducts->where('id', $item['user_product_id'])->first();
+                $affectRow = UserProduct::where('id', $product->id)
                     ->where('stock_num', $product->stock_num)
                     ->where('selled_num', $product->selled_num)
                     ->update([

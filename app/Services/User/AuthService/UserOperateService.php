@@ -185,7 +185,7 @@ class UserOperateService implements UserOperateInterface
         $userInfo = new UserInfo();
         $userInfo->user_id = $user->id;
         $userInfo->mobile = $mobile;
-        $userInfo->type = $userType;
+        $userInfo->client_type = $userType;
         $userInfo->save();
 
         return $user;

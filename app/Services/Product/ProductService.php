@@ -36,13 +36,15 @@ class ProductService implements ProductInterface
             $className = empty($class) ? '' : $class->name;
             $e = $item->export();
             $e['class_name'] = $className;
-            $e['cost_price'] = $userProduct->cost_price;
-            $e['supply_price'] = $userProduct->supply_price;
-            $e['selling_price'] = $userProduct->selling_price;
-            $e['stock_num'] = $userProduct->stock_num;
-            $e['min_sell_num'] = $userProduct->min_sell_num;
-            $e['update_time'] = (new Carbon($userProduct->update_time))->format('Y-m-d H:i:s');
-            return $e;
+            return array_merge($e, $userProduct->export());
+
+//            $e['cost_price'] = $userProduct->cost_price;
+//            $e['supply_price'] = $userProduct->supply_price;
+//            $e['selling_price'] = $userProduct->selling_price;
+//            $e['stock_num'] = $userProduct->stock_num;
+//            $e['min_sell_num'] = $userProduct->min_sell_num;
+//            $e['update_time'] = (new Carbon($userProduct->update_time))->format('Y-m-d H:i:s');
+//            return $e;
         });
 
         Log::info(__FILE__ . '(' . __LINE__  .'), product list successful, ', [

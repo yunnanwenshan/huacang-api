@@ -75,7 +75,7 @@ class OrderService implements OrderInterface
         foreach ($productList as $item) {
             $product = $userProducts->where('id', $item['user_product_id'])->first();
             //较验库存是否足够
-            if ($item['count'] > $product->stock_num) {
+            if (($item['count'] != 0) && ($item['count'] > $product->stock_num)) {
                 Log::info(__FILE__ . '(' . __LINE__ . '), product stock_num insufficient, ', [
                     'user_id' => $user->id,
                     'share_id' => $shareId,
@@ -105,22 +105,24 @@ class OrderService implements OrderInterface
             //2.扣减库存, TODO:多用户并发扣减库存可能会失败
             foreach ($productList as $item) {
                 $product = $userProducts->where('id', $item['user_product_id'])->first();
-                $affectRow = UserProduct::where('id', $product->id)
-                    ->where('stock_num', $product->stock_num)
-                    ->where('selled_num', $product->selled_num)
-                    ->update([
-                        'stock_num' => $product->stock_num - $item['count'],
-                        'selled_num' => $product->selled_num + $item['count']
-                    ]);
-                if ($affectRow == 0) {
-                    Log::info(__FILE__ . '(' . __LINE__ . '), sub stock_num fail, ', [
-                        'user_id' => $user->id,
-                        'share_id' => $shareId,
-                        'product_list' => $productList,
-                        'product' => $product,
-                        'item' => $item,
-                    ]);
-                    throw new OrderException(OrderException::ORDER_PRODUCT_STOCK_FAIL, OrderException::DEFAULT_CODE + 9);
+                if ($item['count'] != 0) {
+                    $affectRow = UserProduct::where('id', $product->id)
+                        ->where('stock_num', $product->stock_num)
+                        ->where('selled_num', $product->selled_num)
+                        ->update([
+                            'stock_num' => $product->stock_num - $item['count'],
+                            'selled_num' => $product->selled_num + $item['count']
+                        ]);
+                    if ($affectRow == 0) {
+                        Log::info(__FILE__ . '(' . __LINE__ . '), sub stock_num fail, ', [
+                            'user_id' => $user->id,
+                            'share_id' => $shareId,
+                            'product_list' => $productList,
+                            'product' => $product,
+                            'item' => $item,
+                        ]);
+                        throw new OrderException(OrderException::ORDER_PRODUCT_STOCK_FAIL, OrderException::DEFAULT_CODE + 9);
+                    }
                 }
             }
 
@@ -356,25 +358,41 @@ class OrderService implements OrderInterface
     {
         $orders = Order::where('user_id', $user->id);
         $orderCollection = $paginator->query($orders);
+        $productDetail = $orderCollection->pluck('order_detail')->toArray();
+        $userProductIds = [];
+        foreach ($productDetail as $pd) {
+            $jsonPd = json_decode($pd, true);
+            $userProductIds = array_merge($userProductIds, array_pluck($jsonPd, 'user_product_id'));
+        }
 
-        $productDetail = $orderCollection->pluck('order_detail');
-        $productIds = array_pluck($productDetail, 'product_id');
-        $products = Product::whereIn('id', $productIds)
+        $userProducts = UserProduct::whereIn('id', $userProductIds)
+            ->select('id', 'product_id')
+            ->get();
+        $userProductIds = $userProducts->pluck('product_id')->toArray();
+        $products = Product::whereIn('id', $userProductIds)
             ->select('id', 'name', 'main_img', 'sub_img')
             ->get();
 
         //返回结果
-        $rs = $orderCollection->map(function ($item) use($products) {
-            $product = json_decode($item->order_detail, true);
-            $mainImgs = array_map(function ($pr) use($products) {
-                $pd = $products->where('id', $pr['product_id'])->first();
-                $mainImg = empty($pd) ? "" : $pd['main_img'];
-                return $mainImg;
-            }, $product);
-            $e = $item->export();
+        $rs = [];
+        foreach ($orderCollection as $order) {
+            $product = json_decode($order->order_detail, true);
+            if (json_last_error()) {
+                continue;
+            }
+            $mainImgs = [];
+            foreach ($product as $pr) {
+                $pd = $userProducts->where('id', $pr['user_product_id'])->first();
+                if (empty($pd)) {
+                    continue;
+                }
+                $prd = $products->where('id', $pd->product_id)->first();
+                $mainImgs[] = empty($prd) ? "" : $prd['main_img'];
+            }
+            $e = $order->export();
             $e['product_list'] = $mainImgs;
-            return $e;
-        });
+            $rs[] = $e;
+        }
 
         Log::info(__FILE__ . '(' . __LINE__ . '), order list, ', [
             'user_id' => $user->id,

@@ -77,14 +77,17 @@ class ProductService implements ProductInterface
             $class = $classCollection->where('id', $item->class_id)->first();
             $userProduct = $userProducts->where('product_id', $item->id)->first();
             $e = $item->export();
-            $e['class_name'] = empty($class) ? '' : $class->name;
-            $e['cost_price'] = $userProduct->cost_price;
-            $e['supply_price'] = $userProduct->supply_price;
-            $e['selling_price'] = $userProduct->selling_price;
-            $e['stock_num'] = $userProduct->stock_num;
-            $e['min_sell_num'] = $userProduct->min_sell_num;
-            $e['update_time'] = (new Carbon($userProduct->update_time))->format('Y-m-d H:i:s');
-            return $e;
+            $className = empty($class) ? '' : $class->name;
+            $e['class_name'] = $className;
+            return array_merge($e, $userProduct->export());
+//            $e['class_name'] = empty($class) ? '' : $class->name;
+//            $e['cost_price'] = $userProduct->cost_price;
+//            $e['supply_price'] = $userProduct->supply_price;
+//            $e['selling_price'] = $userProduct->selling_price;
+//            $e['stock_num'] = $userProduct->stock_num;
+//            $e['min_sell_num'] = $userProduct->min_sell_num;
+//            $e['update_time'] = (new Carbon($userProduct->update_time))->format('Y-m-d H:i:s');
+//            return $e;
         })->toArray();
 
         Log::info(__FILE__ . '(' . __LINE__ . '), product list, ', [

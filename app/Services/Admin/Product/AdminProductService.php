@@ -258,7 +258,7 @@ class AdminProductService implements AdminProductInterface
     */
     public function productList(&$user, array $productParam, Paginator $paginator)
     {
-        $sql = 'select pr.id, pr.name, pr.code, pr.class_id, pr.brand_id, up.cost_price, up.min_sell_num, up.supply_price, up.selling_price, up.stock_num, up.update_time, up.status from product pr INNER JOIN user_product up on pr.id = up.product_id';
+        $sql = 'select pr.id, pr.name, pr.code, pr.class_id, pr.brand_id, up.id as user_product_id, up.cost_price, up.min_sell_num, up.supply_price, up.selling_price, up.stock_num, up.update_time, up.status from product pr INNER JOIN user_product up on pr.id = up.product_id';
         //产品id
         if (!empty($productParam['product_id'])) {
             $sql = $sql . ' where pr.id = ' . $productParam['product_id'];
@@ -337,6 +337,7 @@ class AdminProductService implements AdminProductInterface
         $classeCollection = ProductClass::whereIn('id', $classeIds->toArray())->get();
         $rs = $products->map(function ($item) use($classeCollection) {
             $e['product_id'] = $item->id;
+            $e['user_product_id'] = $item->user_product_id;
             $e['name'] = $item->name;
             $e['code'] = $item->code;
             $e['class_id'] = $item->class_id;
@@ -374,7 +375,7 @@ class AdminProductService implements AdminProductInterface
             ->join('user_product', 'product.id', '=', 'user_product.product_id')
             ->select('product.brands', 'product.type', 'product.class_id','product.template_id', 'product.detail', 'product.main_img', 'product.sub_img', 'product.id', 'product.name', 'product.code', 'product.class_id', 'product.brand_id',
                 'user_product.cost_price', 'user_product.min_sell_num', 'user_product.supply_price',
-                'user_product.selling_price', 'user_product.stock_num', 'user_product.update_time',
+                'user_product.selling_price', 'user_product.stock_num', 'user_product.update_time', 'user_product.id as user_product_id',
                 'user_product.recommend', 'user_product.status', 'user_product.supply_price', 'user_product.cost_price')
             ->first();
 
@@ -387,6 +388,7 @@ class AdminProductService implements AdminProductInterface
         }
 
         return [
+            'user_product_id' => $product->user_product_id,
             'product_id' => $product->id,
             'name' => $product->name,
             'class_id' => $product->class_id,

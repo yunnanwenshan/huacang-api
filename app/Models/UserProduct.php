@@ -20,7 +20,7 @@ class UserProduct extends Model
     public function export()
     {
         return [
-            'product_id' => $this->id,
+            'user_product_id' => $this->id,
             'cost_price' => $this->cost_price,
             'supply_price' => $this->supply_price,
             'selling_price' => $this->selling_price,

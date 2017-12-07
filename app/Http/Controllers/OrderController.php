@@ -25,7 +25,45 @@ class OrderController extends Controller
     }
 
     /**
-     * 创建订单
+     * 直接创建订单
+     */
+    public function createDirect(Request $request)
+    {
+        $this->validate($request, [
+            'share_id' => 'required|numeric',
+            'total_fee' => 'required|numeric',
+            'product_list' => 'required|array',
+        ]);
+
+        $shareId = $request->input('share_id');
+        $totalFee = $request->input('total_fee');
+        $productList = $request->input('product_list');
+
+        try {
+            foreach ($productList as $item) {
+                $v = Validator::make($item, [
+                    'product_id' => 'required|numeric',
+                    'count' => 'required|numeric',
+//                    'price' => 'required|numeric',
+//                    'fee' => 'required|numeric',
+                ]);
+
+                if ($v->fails()) {
+                    Log::info(__FILE__.'('.__LINE__.'), product list validate fail', [
+                        'location' => $v->messages()->toJson(JSON_UNESCAPED_SLASHES),
+                    ]);
+                    throw new OrderException(OrderException::ORDER_PARAM_FAIL, OrderException::DEFAULT_CODE + 1);
+                }
+            }
+            $result = $this->orderService->createDirect($this->user, $shareId, $productList, $totalFee);
+        } catch (Exception $e) {
+            return response()->clientFail($e->getCode(), $e->getMessage());
+        }
+        return response()->clientSuccess($result);
+    }
+
+    /**
+     * 跟进购物车创建订单
      *
      * @param Request $request [description]
      *

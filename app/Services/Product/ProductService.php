@@ -28,7 +28,9 @@ class ProductService implements ProductInterface
         $productIds = $shareDetailCollection->pluck('product_id');
         $products = Product::whereIn('id', $productIds)->get();
         $classIds = $products->pluck('class_id');
-        $userProducts = UserProduct::whereIn('product_id', $productIds)->get();
+        $userProducts = UserProduct::whereIn('product_id', $productIds)
+            ->where('status', UserProduct::STATUS_ONLINE)
+            ->get();
         $classCollection = ProductClass::whereIn('id', $classIds)->get();
         $rs = $products->map(function ($item) use ($classCollection, $userProducts) {
             $class = $classCollection->where('id', $item->class_id)->first();

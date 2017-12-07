@@ -66,7 +66,8 @@ Route::group([
     'middleware' => ['wauth'],
 ], function () {
     // 创建订单
-    Route::any('add',                         ['uses' => 'OrderController@create',             'middleware' => 'wauth.kol']);
+//    Route::any('add',                         ['uses' => 'OrderController@create',             'middleware' => 'wauth.kol']);
+    Route::any('add',                         ['uses' => 'OrderController@createDirect',             'middleware' => 'wauth.kol']);
     // 申请取消订单
     Route::any('cancel/request',              ['uses' => 'OrderController@requestCancel',      'middleware' => 'wauth.kol']);
     // 订单详情

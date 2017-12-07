@@ -7,7 +7,12 @@ use App\Components\Paginator;
 interface OrderInterface
 {
     /**
-     * 创建订单
+     * 直接创建订单
+     */
+    public function createDirect(&$user, $shareId, array $productList, $totalFee);
+
+    /**
+     * 根据购物车创建订单
      */
     public function create(&$user, $shareId, array $productList);
 

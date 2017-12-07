@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Exception;
 use DB;
+use Log;
 
 class AdminUserController extends Controller
 {

@@ -7,6 +7,7 @@ use App\Models\Template;
 use App\Services\Admin\Template\Contract\TemplateInterface;
 use Illuminate\Http\Request;
 use Exception;
+use Log;
 
 class TemplateController extends Controller
 {

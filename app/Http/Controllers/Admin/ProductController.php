@@ -5,6 +5,7 @@ use App\Components\Paginator;
 use App\Services\Admin\Product\Contract\AdminProductInterface;
 use Illuminate\Http\Request;
 use Exception;
+use Log;
 
 class ProductController extends Controller
 {

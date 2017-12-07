@@ -6,7 +6,6 @@ use App\Components\Upload\UploadManager;
 use Dflydev\ApacheMimeTypes\PhpRepository;
 use Illuminate\Http\Request;
 use Exception;
-use App\Http\Requests\UploadFileRequest;
 use App\Http\Requests\UploadNewFolderRequest;
 use Illuminate\Support\Facades\File;
 use Log;

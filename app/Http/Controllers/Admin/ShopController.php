@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Exception;
 use DB;
+use Log;
 
 class ShopController extends Controller
 {

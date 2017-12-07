@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 use App\Services\Admin\ConfigClass\Contract\AdminClassInterface;
 use Illuminate\Http\Request;
 use Exception;
+use Log;
 
 class ClassController extends Controller
 {

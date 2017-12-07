@@ -8,6 +8,7 @@ use App\Services\Order\Contract\OrderInterface;
 use Illuminate\Http\Request;
 use Exception;
 use Validator;
+use Log;
 
 class OrderController extends Controller
 {

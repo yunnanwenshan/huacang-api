@@ -380,17 +380,24 @@ class OrderService implements OrderInterface
             if (json_last_error()) {
                 continue;
             }
-            $mainImgs = [];
+            $productItem = null;
             foreach ($product as $pr) {
                 $pd = $userProducts->where('id', $pr['user_product_id'])->first();
                 if (empty($pd)) {
                     continue;
                 }
                 $prd = $products->where('id', $pd->product_id)->first();
-                $mainImgs[] = empty($prd) ? "" : $prd['main_img'];
+                $productItem['price'] = $pr['price'];
+                $productItem['count'] = $pr['count'];
+                $productItem['img'] = '';
+                $productItem['name'] = '';
+                if (!empty($prd)) {
+                    $productItem['img'] = $prd['main_img'];
+                    $productItem['name'] = $prd['name'];
+                }
             }
             $e = $order->export();
-            $e['product_list'] = $mainImgs;
+            $e['product_list'] = $productItem;
             $rs[] = $e;
         }
 

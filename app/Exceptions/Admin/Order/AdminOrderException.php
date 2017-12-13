@@ -20,6 +20,7 @@ class AdminOrderException extends \Exception
     const ORDER_NO_FINISHED = '订单当前状态不允许操作，订单需要支付完成才可以结束。订单当前订单状态: '; // DEFAULT_CODE + 5
     const ORDER_ORTHER_OP = '订单其它操作暂不支持'; // DEFAULT_CODE + 6
     const ORDER_USER_REQUEST = '用户已申请取消订单，只能取消订单'; // DEFAULT_CODE + 7
+    const ORDER_SHARE_NO = '没有开通商店';  // DEFAULT_CODE + 8
 
     public function __construct($message = '', $code = 0, $previous = null)
     {

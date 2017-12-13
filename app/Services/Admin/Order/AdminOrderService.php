@@ -5,7 +5,9 @@ namespace App\Services\Admin\Order;
 
 use App\Components\Paginator;
 use App\Exceptions\Admin\AdminOrderException\AdminOrderException;
+use App\Exceptions\Order\OrderException;
 use App\Models\Order;
+use App\Models\Share;
 use App\Models\User;
 use App\Services\Admin\Order\Contract\AdminOrderInterface;
 use Carbon\Carbon;
@@ -112,7 +114,12 @@ class AdminOrderService implements AdminOrderInterface
      */
     public function orderList(&$user, Paginator $paginator, $startTime, $endTime, $status)
     {
-        $sql = 'select * from orders o where o.user_id = ?';
+        $share = Share::where('user_id', $user->id)->first();
+        if (empty($share)) {
+            throw new AdminOrderException(AdminOrderException::ORDER_SHARE_NO, AdminOrderException::DEFAULT_CODE + 8);
+        }
+
+        $sql = 'select * from orders o where o.share_id = ?';
         if (!empty($startTime)) {
             $sql = $sql . ' and o.start_time >= \'' . (new Carbon($startTime))->format('Y-m-d H:i:s') . '\'';
         }
@@ -123,9 +130,11 @@ class AdminOrderService implements AdminOrderInterface
             $sql = $sql . ' and o.status = ' . $status;
         }
         $sql = $sql . ' order by o.start_time desc';
-        $orders = DB::select($sql, [$user->id]);
+        $orders = DB::select($sql, [$share->id]);
         $ordercollection = $paginator->queryArray($orders);
-        $userList = User::where('id', $ordercollection->pluck('user_id')->toArray())->get();
+        $userIdsCollection = $ordercollection->pluck('user_id');
+        $userIds = $userIdsCollection->toArray();
+        $userList = User::whereIn('id', $userIds)->get();
         $rs = $ordercollection->map(function ($item) use($userList) {
             $user = $userList->where('id', $item->user_id)->first();
             $e['order_sn'] = $item->sn;

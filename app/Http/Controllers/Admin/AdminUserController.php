@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Components\Paginator;
-use App\Exceptions\User\AdminUserException;
+use App\Exceptions\Admin\User\AdminUserException;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Share;
 use App\Models\User;
+use App\Models\UserProduct;
 use Illuminate\Http\Request;
 use Exception;
 use DB;
@@ -46,40 +47,62 @@ class AdminUserController extends Controller
 
         try {
             //查找商家信息
-            $shares = Share::where('user_id', $user->id)->orderBy('id', 'desc')->first();
-            if (empty($shares)) {
+            $shares = Share::where('user_id', $user->id)->get();
+            if (empty($shares) || ($shares->count() <= 0)) {
                 throw new AdminUserException(AdminUserException::USER_NO_MARKET, AdminUserException::DEFAULT_CODE + 1);
             }
-            $orders = Order::where('share_id', $shares->id)
+            $shareIds = $shares->pluck('id')->toArray();
+            $orders = Order::whereIn('share_id', $shareIds)
                 ->where('status', Order::STATUS_FINISHED)
                 ->groupBy('user_id')
+                ->groupBy('share_id')
                 ->select('share_id', 'user_id', DB::raw('sum(total_fee) as total_fee'))
                 ->get();
             $orderCollections = $paginator->queryArray($orders);
             $userIds = $orderCollections->pluck('user_id')->toArray();
             $users = User::whereIn('id', $userIds)->get();
-            $userOrders = Order::where('share_id', $shares->id)
+            $userOrders = Order::whereIn('share_id', $shareIds)
                 ->where('status', Order::STATUS_FINISHED)
                 ->whereIn('user_id', $userIds)
                 ->select('user_id', 'order_detail', 'share_id')
                 ->get();
 
-            $rs = $orderCollections->map(function ($item) use ($users, $userOrders) {
+            $rs = $orderCollections->map(function ($item) use ($users, $userOrders, $shares) {
+                $share = $shares->where('id', $item->share_id)->first();
                 $user = $users->where('id', $item->user_id)->first();
+                $e['share'] = [
+                    'share_id' => $share->id,
+                    'market_name' => $share->name,
+                ];
+                $e['user'] = [
+                    'client_id' => $item->user_id,
+                    'user_name' => empty($item->user_name) ? '' : $item->user_name,
+                ];
                 $e['client_id'] = $item->user_id;
                 $e['mobile'] = $user->mobile;
                 $e['total_fee'] = $item->total_fee;
-                $ors = $userOrders->where('user_id', $item->user_id)->where('share_id', $item->share_id)->get();
-                $e['product_list'] = $ors->map(function ($it) {
+                $ors = $userOrders->where('user_id', $item->user_id)->where('share_id', $item->share_id);
+                $productList = array();
+                $ors->map(function ($it) use (&$productList) {
                     $orderDetail = json_decode($it->order_detail, true);
-                    $product = Product::where('id', $orderDetail['product_id'])->first();
-                    $i['product_id'] = $orderDetail['product_id'];
-                    $i['product_name'] = $product->name;
-                    $i['buy_num'] = $orderDetail['num'];
-                    $i['price'] = $orderDetail['price'];
-                    $i['total_fee'] = $orderDetail['num'] * $orderDetail['price'];
-                    return $i;
+                    if (json_last_error()) {
+                        return;
+                    }
+                    foreach ($orderDetail as $detail) {
+                        $product = UserProduct::where('user_product.id', $detail['user_product_id'])
+                            ->join('product', 'user_product.product_id', '=', 'product.id')
+                            ->select('product.name')
+                            ->first();
+                        $i['user_product_id'] = $detail['user_product_id'];
+                        $i['product_name'] = $product->name;
+                        $i['buy_num'] = $detail['count'];
+                        $i['price'] = $detail['price'];
+                        $i['total_fee'] = $detail['count'] * $detail['price'];
+                        $productList[] = $i;
+                    }
                 });
+                $e['product_list'] = $productList;
+                return $e;
             });
 
             $result = array_values($rs->toArray());
@@ -87,6 +110,6 @@ class AdminUserController extends Controller
             return response()->clientFail($e->getCode(), $e->getMessage());
         }
 
-        return response()->clientSuccess(['page' => $paginator->export(), 'client_list' => $result, 'market_name' => $shares->name]);
+        return response()->clientSuccess(['page' => $paginator->export(), 'client_list' => $result]);
     }
 }

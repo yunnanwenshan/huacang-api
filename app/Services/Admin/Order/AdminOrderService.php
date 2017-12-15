@@ -7,8 +7,10 @@ use App\Components\Paginator;
 use App\Exceptions\Admin\AdminOrderException\AdminOrderException;
 use App\Exceptions\Order\OrderException;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\Share;
 use App\Models\User;
+use App\Models\UserProduct;
 use App\Services\Admin\Order\Contract\AdminOrderInterface;
 use Carbon\Carbon;
 use Log;
@@ -28,7 +30,16 @@ class AdminOrderService implements AdminOrderInterface
             'remark' => $remark,
         ]);
 
-        $order = Order::where('user_id', $user->id)
+        $shares = Share::where('user_id', $user->id)->get();
+        if (empty($shares) || ($shares->count() <= 0)) {
+            Log::info(__FILE__ . '(' . __LINE__ . '), not share for user, ', [
+                'user_id' => $user->id,
+                'order_sn' => $orderSn,
+            ]);
+            throw new AdminOrderException(AdminOrderException::ORDER_SHARE_NO, AdminOrderException::DEFAULT_CODE + 9);
+        }
+
+        $order = Order::whereIn('share_id', $shares->pluck('id')->toArray())
             ->where('sn', $orderSn)
             ->first();
         if (empty($order)) {
@@ -57,8 +68,6 @@ class AdminOrderService implements AdminOrderInterface
         }
 
         //用户已经申请取消订单
-
-
         switch ($status) {
             case Order::STATUS_CANCELED:
                 //检查订单状态
@@ -114,28 +123,49 @@ class AdminOrderService implements AdminOrderInterface
      */
     public function orderList(&$user, Paginator $paginator, $startTime, $endTime, $status)
     {
-        $share = Share::where('user_id', $user->id)->first();
-        if (empty($share)) {
+        $shares = Share::where('user_id', $user->id)->get();
+        if (empty($shares) || ($shares->count() <= 0)) {
             throw new AdminOrderException(AdminOrderException::ORDER_SHARE_NO, AdminOrderException::DEFAULT_CODE + 8);
         }
 
-        $sql = 'select * from orders o where o.share_id = ?';
+        $sql = 'select * from orders o where o.share_id in(select s.id from share s where s.user_id = ?)';
         if (!empty($startTime)) {
             $sql = $sql . ' and o.start_time >= \'' . (new Carbon($startTime))->format('Y-m-d H:i:s') . '\'';
         }
         if (!empty($endTime)) {
-            $sql = $sql . ' and o.ent_time <= \'' . (new Carbon($endTime))->format('Y-m-d H:i:s') . '\'';
+            $sql = $sql . ' and o.end_time <= \'' . (new Carbon($endTime))->format('Y-m-d H:i:s') . '\'';
         }
         if (!empty($status)) {
             $sql = $sql . ' and o.status = ' . $status;
         }
         $sql = $sql . ' order by o.start_time desc';
-        $orders = DB::select($sql, [$share->id]);
-        $ordercollection = $paginator->queryArray($orders);
-        $userIdsCollection = $ordercollection->pluck('user_id');
+        $orders = DB::select($sql, [$user->id]);
+        $orderCollection = $paginator->queryArray($orders);
+
+        //获取产品名称
+        $productDetail = $orderCollection->pluck('order_detail')->toArray();
+        $userProductIds = [];
+        foreach ($productDetail as $pd) {
+            $jsonPd = json_decode($pd, true);
+            $userProductIds = array_merge($userProductIds, array_pluck($jsonPd, 'user_product_id'));
+        }
+
+        $userProducts = UserProduct::whereIn('id', $userProductIds)
+            ->select('id', 'product_id')
+            ->get();
+        $userProductIds = $userProducts->pluck('product_id')->toArray();
+        $products = Product::whereIn('id', $userProductIds)
+            ->select('id', 'name', 'main_img', 'sub_img')
+            ->get();
+
+        //获取用户信息
+        $userIdsCollection = $orderCollection->pluck('user_id');
         $userIds = $userIdsCollection->toArray();
         $userList = User::whereIn('id', $userIds)->get();
-        $rs = $ordercollection->map(function ($item) use($userList) {
+
+        //返回客户端需要的用户数据
+        $rs = [];
+        $orderCollection->map(function ($item) use(&$rs, $userList, $products, $userProducts) {
             $user = $userList->where('id', $item->user_id)->first();
             $e['order_sn'] = $item->sn;
             $e['user_id'] = $user->id;
@@ -147,8 +177,29 @@ class AdminOrderService implements AdminOrderInterface
             $e['star_time'] = $item->start_time;
             $e['end_time'] = $item->end_time;
             $e['remark'] = $item->remark;
-            $e['product_list'] = json_decode($item->order_detail, true);
-            return $e;
+            $product = json_decode($item->order_detail, true);
+            if (json_last_error()) {
+                return;
+            }
+            $productItem = [];
+            foreach ($product as $pr) {
+                $pd = $userProducts->where('id', $pr['user_product_id'])->first();
+                if (empty($pd)) {
+                    return;
+                }
+                $prd = $products->where('id', $pd->product_id)->first();
+                $pItem['price'] = $pr['price'];
+                $pItem['count'] = $pr['count'];
+                $pItem['img'] = '';
+                $pItem['name'] = '';
+                if (!empty($prd)) {
+                    $pItem['img'] = $prd['main_img'];
+                    $pItem['name'] = $prd['name'];
+                }
+                $productItem[] = $pItem;
+            }
+            $e['product_list'] = $productItem;
+            $rs[] = $e;
         });
 
         Log::info(__FILE__ . '(' . __LINE__ . '), admin order list, ', [

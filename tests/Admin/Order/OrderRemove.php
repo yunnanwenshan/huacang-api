@@ -42,7 +42,7 @@ class AddTemplateTest extends TestCase
         print_r($response->getBody()->getContents());
 
         $request_body = [
-            'order_sn' => 'T17112537993062300002',
+            'order_sn' => 'T1712131006009010000E',
         ];
 
         $result = json_decode((string)$response->getBody(), true);

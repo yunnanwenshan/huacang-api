@@ -17,6 +17,7 @@ class ClassService implements AdminClassInterface
     public function classList(&$user, $type)
     {
         $parentClasses = ProductClass::where('type', $type)
+            ->where('user_id', $user->id)
             ->where('parent_id', 0)
             ->get();
         if (empty($parentClasses)) {
@@ -57,7 +58,9 @@ class ClassService implements AdminClassInterface
      */
     public function brandsList(&$user)
     {
-        $brands = Brands::select(DB::raw('distinct brands'))->get();
+        $brands = Brands::select(DB::raw('distinct brands'))
+            ->where('user_id', $user->id)
+            ->get();
         $rs = $brands->map(function ($item) {
             return $item->brands;
         });

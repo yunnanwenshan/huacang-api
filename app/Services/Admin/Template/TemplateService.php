@@ -99,16 +99,6 @@ from `template` inner join `class` on `template`.`class_id` = `class`.`id` inner
         $sql = $sql . ' order by `template`.`update_time` desc';
         $templates = DB::select($sql, [$user->id, Template::STATUS_ENABLE]);
 
-//        $templates = Template::where('template.user_id', $user->id)
-//            ->join('class', 'template.class_id', '=', 'class.id')
-//            ->join('template_form_item', 'template.id', '=', 'template_form_item.template_id')
-//            ->where('template.update_time', '>=', (new Carbon($startTime))->format('Y-m-d H:i:s'))
-//            ->where('template.update_time', '<=', (new Carbon($endTime))->format('Y-m-d H:i:s'))
-//            ->where('template.status', Template::STATUS_ENABLE)
-//            ->select('template.user_id', 'template.template_name', 'class.name as class_name', 'template.update_time', 'template_form_item.form_content')
-//            ->orderBy('template.update_time', 'desc')
-//            ->get();
-
         if (empty($templates)) {
             return [];
         }

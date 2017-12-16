@@ -71,24 +71,24 @@ class AdminOrderService implements AdminOrderInterface
         switch ($status) {
             case Order::STATUS_CANCELED:
                 //检查订单状态
-                if (!in_array($order->status, [Order::STATUS_INIT, Order::STATUS_PAY, Order::STATUS_CLIENT_REQUEST_CANCEL])) {
-                    Log::info(__FILE__ . '(' . __LINE__ . '), order status ', [
-                        'order_id' => $orderSn,
-                        'user_id' => $user->id,
-                        'status' => $status,
-                    ]);
-                    throw new AdminOrderException(AdminOrderException::ORDER_NO_CANCEL, AdminOrderException::DEFAULT_CODE + 2);
-                }
+//                if (!in_array($order->status, [Order::STATUS_INIT, Order::STATUS_PAY, Order::STATUS_CLIENT_REQUEST_CANCEL])) {
+//                    Log::info(__FILE__ . '(' . __LINE__ . '), order status ', [
+//                        'order_id' => $orderSn,
+//                        'user_id' => $user->id,
+//                        'status' => $status,
+//                    ]);
+//                    throw new AdminOrderException(AdminOrderException::ORDER_NO_CANCEL, AdminOrderException::DEFAULT_CODE + 2);
+//                }
 
                 break;
             case Order::STATUS_FINISHED:
-                if ($order->status == Order::STATUS_CLIENT_REQUEST_CANCEL) {
-                    throw new AdminOrderException(AdminOrderException::ORDER_USER_REQUEST, AdminOrderException::DEFAULT_CODE + 7);
-                }
-                if (!in_array($order->status, [Order::STATUS_REFUND])) {
-                    throw new AdminOrderException(AdminOrderException::ORDER_NO_FINISHED . Order::STATUS_TO_DESC[$order->status],
-                        AdminOrderException::DEFAULT_CODE + 5);
-                }
+//                if ($order->status == Order::STATUS_CLIENT_REQUEST_CANCEL) {
+//                    throw new AdminOrderException(AdminOrderException::ORDER_USER_REQUEST, AdminOrderException::DEFAULT_CODE + 7);
+//                }
+//                if (!in_array($order->status, [Order::STATUS_REFUND])) {
+//                    throw new AdminOrderException(AdminOrderException::ORDER_NO_FINISHED . Order::STATUS_TO_DESC[$order->status],
+//                        AdminOrderException::DEFAULT_CODE + 5);
+//                }
                 break;
             default:
                 Log::info(__FILE__ . '(' . __LINE__ . '), default update order, ', [
@@ -101,7 +101,7 @@ class AdminOrderService implements AdminOrderInterface
         }
 
         $affectRow = Order::where('sn', $orderSn)
-            ->where('user_id', $user->id)
+            ->whereIn('share_id', $shares->pluck('id')->toArray())
             ->where('status', '!=', $status)
             ->update(['status' => $status]);
 

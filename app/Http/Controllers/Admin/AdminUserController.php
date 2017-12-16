@@ -62,7 +62,15 @@ class AdminUserController extends Controller
             $userIds = $orderCollections->pluck('user_id')->toArray();
             $users = User::whereIn('id', $userIds)->get();
             $userOrders = Order::whereIn('share_id', $shareIds)
-                ->where('status', Order::STATUS_FINISHED)
+                ->whereIn('status', [
+                    Order::STATUS_FINISHED,
+                    Order::STATUS_INIT,
+                    Order::STATUS_PAY,
+                    Order::STATUS_SEND_PRODUCT,
+                    Order::STATUS_SENDED_PRODUCT,
+                    Order::STATUS_AUDIT,
+                    Order::STATUS_REFUND,
+                ])
                 ->whereIn('user_id', $userIds)
                 ->select('user_id', 'order_detail', 'share_id')
                 ->get();

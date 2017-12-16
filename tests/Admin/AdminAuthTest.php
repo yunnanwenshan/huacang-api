@@ -21,7 +21,7 @@ class AddTemplateTest extends TestCase
     public function testUserLogin()
     {
         $request_body = [
-            'user_name' => 'ltptest123456',
+            'user_name' => 'zhuangzening',
             'password' => 123456,
         ];
         $request_header = [

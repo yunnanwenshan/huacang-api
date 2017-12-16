@@ -258,10 +258,10 @@ class AdminProductService implements AdminProductInterface
     */
     public function productList(&$user, array $productParam, Paginator $paginator)
     {
-        $sql = 'select pr.id, pr.name, pr.code, pr.class_id, pr.brand_id, up.id as user_product_id, up.cost_price, up.min_sell_num, up.supply_price, up.selling_price, up.stock_num, up.update_time, up.status from product pr INNER JOIN user_product up on pr.id = up.product_id';
+        $sql = 'select pr.id, pr.user_id, pr.name, pr.code, pr.class_id, pr.brand_id, up.id as user_product_id, up.cost_price, up.min_sell_num, up.supply_price, up.selling_price, up.stock_num, up.update_time, up.status from product pr INNER JOIN user_product up on pr.id = up.product_id where pr.user_id = ?';
         //产品id
         if (!empty($productParam['product_id'])) {
-            $sql = $sql . ' where pr.id = ' . $productParam['product_id'];
+            $sql = $sql . ' and pr.id = ' . $productParam['product_id'];
         }
 
         //产品名称
@@ -318,18 +318,7 @@ class AdminProductService implements AdminProductInterface
             }
         }
 
-//        $productsQuery = Product::where('product.id', $productParam['product_id'])
-//            ->where('product.name', $productParam['name'])
-//            ->where('product.class_id', $productParam['class_id'])
-//            ->where('product.brands', $productParam['brands'])
-//            ->where('user_product.status', $productParam['status'])
-//            ->where('user_product.update_time', '>=', $productParam['start_time'])
-//            ->where('user_product.update_time', '<=', $productParam['end_time'])
-//            ->join('user_product', 'product.id', '=', 'user_product.product_id')
-//            ->select('product.id', 'product.name', 'product.code', 'product.class_id', 'product.brand_id',
-//                'user_product.cost_price', 'user_product.min_sell_num', 'user_product.supply_price', 'user_product.selling_price', 'user_product.stock_num', 'user_product.update_time');
-
-        $productsQuery = DB::select($sql);
+        $productsQuery = DB::select($sql, [$user->id]);
 
         $products = $paginator->queryArray($productsQuery);
         $classeIds = $products->pluck('class_id');
@@ -337,6 +326,7 @@ class AdminProductService implements AdminProductInterface
         $classeCollection = ProductClass::whereIn('id', $classeIds->toArray())->get();
         $rs = $products->map(function ($item) use($classeCollection) {
             $e['product_id'] = $item->id;
+            $e['user_id'] = $item->user_id;
             $e['user_product_id'] = $item->user_product_id;
             $e['name'] = $item->name;
             $e['code'] = $item->code;
@@ -358,7 +348,7 @@ class AdminProductService implements AdminProductInterface
         Log::info(__FILE__ . '(' . __LINE__ . '), product list successful, ', [
             'user_id' => $user->id,
             'product_params' => $productParam,
-            '$result' => $result,
+            'result' => $result,
             'productsQuery' => $productsQuery,
         ]);
 

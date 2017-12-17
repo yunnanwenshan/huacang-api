@@ -125,6 +125,7 @@ class AdminProductService implements AdminProductInterface
             $userProduct->stock_num = $productParam['stock_num'];
             $userProduct->min_sell_num = $productParam['min_sell_num'];
             $userProduct->recommend = $productParam['recommend'];
+            $userProduct->stock_unit = $productParam['stock_unit'];
             $userProduct->save();
 
             Log::info(__FILE__ . '(' . __LINE__ . '), add product successful, ', [
@@ -207,6 +208,7 @@ class AdminProductService implements AdminProductInterface
                     'stock_num' => $productParam['stock_num'],
                     'recommend' => $productParam['recommend'],
                     'min_sell_num' => $productParam['min_sell_num'],
+                    'stock_unit' => $productParam['stock_unit'],
                 ]);
             DB::commit();
 
@@ -364,7 +366,7 @@ class AdminProductService implements AdminProductInterface
             ->where('product.id', $productId)
             ->join('user_product', 'product.id', '=', 'user_product.product_id')
             ->select('product.brands', 'product.type', 'product.class_id','product.template_id', 'product.detail', 'product.main_img', 'product.sub_img', 'product.id', 'product.name', 'product.code', 'product.class_id', 'product.brand_id',
-                'user_product.cost_price', 'user_product.min_sell_num', 'user_product.supply_price',
+                'user_product.stock_unit', 'user_product.cost_price', 'user_product.min_sell_num', 'user_product.supply_price',
                 'user_product.selling_price', 'user_product.stock_num', 'user_product.update_time', 'user_product.id as user_product_id',
                 'user_product.recommend', 'user_product.status', 'user_product.supply_price', 'user_product.cost_price')
             ->first();
@@ -390,6 +392,7 @@ class AdminProductService implements AdminProductInterface
             'cost_price' => $product->cost_price,
             'supply_price' => $product->supply_price,
             'selling_price' => $product->selling_price,
+            'stock_unit' => $product->stock_unit,
             'stock_num' => $product->stock_num,
             'min_sell_num' => $product->min_sell_num,
             'detail' => $product->detail,
@@ -507,6 +510,9 @@ class AdminProductService implements AdminProductInterface
      */
     public function shareProduct(&$user, array $params)
     {
+        Log::info(__FILE__ . '(' . __LINE__ . '), ', [
+            'parasm' => $params,
+        ]);
         if (empty($params['market_name']) || (count($params['product_ids']) <= 0)) {
             Log::info(__FILE__ . '(' . __LINE__ . '), share product error, ', [
                 'user_id' => $user->id,
@@ -547,8 +553,7 @@ class AdminProductService implements AdminProductInterface
     //创建商城
     private function createShop(&$user, $params)
     {
-        $userProductsCollection = $this->getUserProducts($user, $params);
-
+        $this->getUserProducts($user, $params);
         $share = Share::where('user_id', $user->id)->first();
         if (!empty($share)) {
             $this->updateShop($user, $params);
@@ -565,13 +570,14 @@ class AdminProductService implements AdminProductInterface
             $share->url = ''; //TODO:是否想要写商城url地址
             $share->save();
 
-            $userProducts = $userProductsCollection->toArray();
-            foreach ($userProducts as $product) {
+            $userShares = $params['product_ids'];
+            foreach ($userShares as $item) {
                 $shareDetail = new ShareDetail();
                 $shareDetail->share_id = $share->id;
-                $shareDetail->product_id = $product['product_id'];
-                $shareDetail->cost_price = $product['cost_price'];
-                $shareDetail->supply_price = $product['supply_price'];
+                $shareDetail->user_product_id = $item['user_product_id'];
+                $shareDetail->cost_price = $item['cost_price'];
+                $shareDetail->supply_price = $item['supply_price'];
+                $shareDetail->selling_price = $item['supply_price'];
                 $shareDetail->save();
             }
 
@@ -585,25 +591,26 @@ class AdminProductService implements AdminProductInterface
     //更新商城
     private function updateShop(&$user, $params)
     {
-        $userProductsCollection = $this->getUserProducts($user, $params);
-        $shareDetailCollection = ShareDetail::whereIn('product_id', $params['product_ids'])->get();
+        $productIds = [];
         foreach ($params['product_ids'] as $item) {
-            $shareDetail = $shareDetailCollection->where('product_id', $item)->first();
-            $userProduct = $userProductsCollection->where('product_id', $item)->first();
-            if (empty($userProduct)) {
-                Log::info(__FILE__ . '(' . __LINE__ . '), update shop continue, ', [
-                    'user_id' => $user->id,
-                    'params' => $params,
-                ]);
-                continue;
-            }
+            $productIds[] = $item['user_product_id'];
+        }
+        if (empty($productIds)) {
+            throw new \Exception('user_product_id为空', 1);
+        }
+
+        $this->getUserProducts($user, $params);
+        $shareDetailCollection = ShareDetail::whereIn('user_product_id', $productIds)->get();
+        foreach ($params['product_ids'] as $item) {
+            $shareDetail = $shareDetailCollection->where('user_product_id', $item['user_product_id'])->first();
             if (empty($shareDetail)) {
                 //新增加商店商品
                 $shareDetail = new ShareDetail();
                 $shareDetail->share_id = $params['share_id'];
-                $shareDetail->product_id = $item;
-                $shareDetail->cost_price = $userProduct->cost_price;
-                $shareDetail->supply_price = $userProduct->supply_price;
+                $shareDetail->user_product_id = $item['user_product_id'];
+                $shareDetail->cost_price = $item['cost_price'];
+                $shareDetail->supply_price = $item['supply_price'];
+                $shareDetail->selling_price = $item['selling_price'];
                 $shareDetail->save();
 
                 Log::info(__FILE__ . '(' . __LINE__ . '), add share detail, ', [
@@ -614,10 +621,11 @@ class AdminProductService implements AdminProductInterface
             } else {
                 //更新价格
                 $affactRow = ShareDetail::where('share_id', $params['share_id'])
-                    ->where('product_id', $item)
+                    ->where('user_product_id', $item['user_product_id'])
                     ->update([
-                        'cost_price' => $userProduct->cost_price,
-                        'supply_price' => $userProduct->supply_price,
+                        'cost_price' => $item['cost_price'],
+                        'supply_price' => $item['supply_price'],
+                        'selling_price' => $item['selling_price'],
                     ]);
                 Log::info(__FILE__ . '(' . __LINE__ . '), share detail update, ', [
                     'affact_row' => $affactRow,
@@ -635,14 +643,20 @@ class AdminProductService implements AdminProductInterface
 
     private function getUserProducts(&$user, $params)
     {
-        $productCount = Product::whereIn('id', $params['product_ids'])->where('user_id', $user->id)->count();
-        $userProductsCollection = UserProduct::whereIn('product_id', $params['product_ids'])->get();
-        if (($productCount != count($params['product_ids'])) || ($userProductsCollection->count() != count($params['product_ids']))) {
+        $productIds = [];
+        foreach ($params['product_ids'] as $item) {
+            $productIds[] = $item['user_product_id'];
+        }
+        if (empty($productIds)) {
+            throw new \Exception('user_product_id为空', 1);
+        }
+        $userProductsCollection = UserProduct::whereIn('id', $productIds)->get();
+        if ($userProductsCollection->count() != count($productIds)) {
             Log::info(__FILE__ . '(' . __LINE__ . '), share product error 2, ', [
                 'user_id' => $user->id,
                 'params' => $params,
             ]);
-            throw new ProductException(ProductException::PRODUCT_MARKET_NAME_IS_NULL, ProductException::DEFAULT_CODE + 6);
+            throw new ProductException(ProductException::PRODUCT_PARAM_VALID, ProductException::DEFAULT_CODE + 12);
         }
 
         return $userProductsCollection;

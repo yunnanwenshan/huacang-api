@@ -40,7 +40,7 @@ class ShopController extends Controller
         try {
             $shares = Share::where('user_id', $user->id)->get();
             $rs = $shares->map(function ($item) {
-                $e['share_id'] = $item->id;
+//                $e['share_id'] = $item->id;
                 $e['name'] = $item->name;
                 return $e;
             });

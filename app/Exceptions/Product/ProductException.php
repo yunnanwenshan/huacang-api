@@ -19,6 +19,7 @@ class ProductException extends \Exception
     const PRODUCT_MARKET_CREATE_FAIL = '商城失败'; // DEFAULT_CODE + 6
     const PRODUCT_MARKET_NAME_EXISTED = '商城已存在'; // DEFAULT_CODE + 7, 8
     const PRODUCT_NO_ONLINE = '商品已下线'; // DEFAULT_CODE + 10
+    const PRODUCT_PARAM_VALID = '参数非法'; // DEFAULT_CODE + 11, 12
 
     public function __construct($message = '', $code = 0, $previous = null)
     {

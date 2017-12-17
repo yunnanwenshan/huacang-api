@@ -2,10 +2,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Components\Paginator;
+use App\Exceptions\Product\ProductException;
 use App\Services\Admin\Product\Contract\AdminProductInterface;
 use Illuminate\Http\Request;
 use Exception;
 use Log;
+use Validator;
 
 class ProductController extends Controller
 {
@@ -33,45 +35,47 @@ class ProductController extends Controller
     {
         $this->validate($request, [
             'name' => 'required|string',
-            'class_id' => 'required|numeric',
+//            'class_id' => 'required|numeric',
             'main_class_name' => 'required|string',
             'sub_class_name' => 'required|string',
             'type' => 'required|in:1,2',
             'code' => 'required',
-            'recommend' => 'required|string',
+//            'recommend' => 'required|string',
             'brands' => 'required|string',
-            'valid_time' => 'required|string',
+//            'valid_time' => 'required|string',
             'cost_price' => 'required|numeric',
             'supply_price' => 'required|numeric',
-            'selling_price' => 'required|numeric',
+//            'selling_price' => 'required|numeric',
             'stock_num' => 'required|numeric',
-            'min_sell_num' => 'required|numeric',
-            'detail' => 'required|string',
-            'sale_type' => 'required|in:1,2',
-            'template_id' => 'required|numeric',
-            'main_img' => 'required|string',
-            'sub_img' => 'required|array',
+            'stock_unit' => 'required|string',
+//            'min_sell_num' => 'required|numeric',
+//            'detail' => 'required|string',
+//            'sale_type' => 'required|in:1,2',
+//            'template_id' => 'required|numeric',
+//            'main_img' => 'required|string',
+//            'sub_img' => 'required|array',
         ]);
 
-        $params['name'] = $request->input('name');
-        $params['class_id'] = $request->input('class_id');
-        $params['main_class_name'] = $request->input('main_class_name');
-        $params['sub_class_name'] = $request->input('sub_class_name');
-        $params['type'] = $request->input('type');
-        $params['code'] = $request->input('code');
-        $params['recommend'] = $request->input('recommend');
-        $params['brands'] = $request->input('brands');
-        $params['valid_time'] = $request->input('valid_time');
-        $params['cost_price'] = $request->input('cost_price');
-        $params['supply_price'] = $request->input('supply_price');
-        $params['selling_price'] = $request->input('selling_price');
-        $params['stock_num'] = $request->input('stock_num');
-        $params['min_sell_num'] = $request->input('min_sell_num');
-        $params['detail'] = $request->input('detail');
-        $params['sale_type'] = $request->input('sale_type');
-        $params['template_id'] = $request->input('template_id');
-        $params['main_img'] = $request->input('main_img');
-        $params['sub_img'] = $request->input('sub_img');
+        $params['name'] = $request->input('name', '');
+        $params['class_id'] = $request->input('class_id', 0);
+        $params['main_class_name'] = $request->input('main_class_name', '');
+        $params['sub_class_name'] = $request->input('sub_class_name', '');
+        $params['type'] = $request->input('type', 0);
+        $params['code'] = $request->input('code', '');
+        $params['recommend'] = $request->input('recommend', '');
+        $params['brands'] = $request->input('brands', '');
+        $params['valid_time'] = $request->input('valid_time', '');
+        $params['cost_price'] = $request->input('cost_price', 0);
+        $params['supply_price'] = $request->input('supply_price', 0);
+        $params['selling_price'] = $request->input('selling_price', 0);
+        $params['stock_num'] = $request->input('stock_num', 0);
+        $params['min_sell_num'] = $request->input('min_sell_num', 0);
+        $params['detail'] = $request->input('detail', 0);
+        $params['sale_type'] = $request->input('sale_type', 0);
+        $params['template_id'] = $request->input('template_id', 0);
+        $params['main_img'] = $request->input('main_img', '');
+        $params['sub_img'] = $request->input('sub_img', null);
+        $params['stock_unit'] = $request->input('stock_unit', '');
 
         try {
             $this->productService->addProduct($this->user, $params);
@@ -94,46 +98,48 @@ class ProductController extends Controller
         $this->validate($request, [
             'product_id' => 'required|numeric',
             'name' => 'required|string',
-            'class_id' => 'required|numeric',
+//            'class_id' => 'required|numeric',
             'main_class_name' => 'string',
             'sub_class_name' => 'string',
             'type' => 'required|in:1,2',
             'code' => 'required',
-            'recommend' => 'required|string',
+//            'recommend' => 'required|string',
             'brands' => 'required|string',
-            'valid_time' => 'required|string',
+//            'valid_time' => 'required|string',
             'cost_price' => 'required|numeric',
             'supply_price' => 'required|numeric',
             'selling_price' => 'required|numeric',
             'stock_num' => 'required|numeric',
             'min_sell_num' => 'required|numeric',
-            'detail' => 'required|string',
-            'sale_type' => 'required|in:1,2',
-            'template_id' => 'required|numeric',
-            'main_img' => 'required|string',
-            'sub_img' => 'required|array',
+            'stock_unit' => 'required|string',
+//            'detail' => 'required|string',
+//            'sale_type' => 'required|in:1,2',
+//            'template_id' => 'required|numeric',
+//            'main_img' => 'required|string',
+//            'sub_img' => 'required|array',
         ]);
 
-        $params['product_id'] = $request->input('product_id');
-        $params['name'] = $request->input('name');
-        $params['class_id'] = $request->input('class_id');
-        $params['main_class_name'] = $request->input('main_class_name');
-        $params['sub_class_name'] = $request->input('sub_class_name');
-        $params['type'] = $request->input('type');
-        $params['code'] = $request->input('code');
-        $params['recommend'] = $request->input('recommend');
-        $params['brands'] = $request->input('brands');
-        $params['valid_time'] = $request->input('valid_time');
-        $params['cost_price'] = $request->input('cost_price');
-        $params['supply_price'] = $request->input('supply_price');
-        $params['selling_price'] = $request->input('selling_price');
-        $params['stock_num'] = $request->input('stock_num');
-        $params['min_sell_num'] = $request->input('min_sell_num');
-        $params['detail'] = $request->input('detail');
-        $params['sale_type'] = $request->input('sale_type');
-        $params['template_id'] = $request->input('template_id');
-        $params['main_img'] = $request->input('main_img');
-        $params['sub_img'] = $request->input('sub_img');
+        $params['product_id'] = $request->input('product_id', 0);
+        $params['name'] = $request->input('name', '');
+        $params['class_id'] = $request->input('class_id', 0);
+        $params['main_class_name'] = $request->input('main_class_name', '');
+        $params['sub_class_name'] = $request->input('sub_class_name', '');
+        $params['type'] = $request->input('type', 0);
+        $params['code'] = $request->input('code', '');
+        $params['recommend'] = $request->input('recommend', '');
+        $params['brands'] = $request->input('brands', '');
+        $params['valid_time'] = $request->input('valid_time', '');
+        $params['cost_price'] = $request->input('cost_price', 0);
+        $params['supply_price'] = $request->input('supply_price', 0);
+        $params['selling_price'] = $request->input('selling_price', 0);
+        $params['stock_num'] = $request->input('stock_num', 0);
+        $params['min_sell_num'] = $request->input('min_sell_num', 0);
+        $params['detail'] = $request->input('detail', '');
+        $params['sale_type'] = $request->input('sale_type', '');
+        $params['template_id'] = $request->input('template_id', 0);
+        $params['main_img'] = $request->input('main_img', '');
+        $params['sub_img'] = $request->input('sub_img', '');
+        $params['stock_unit'] = $request->input('stock_unit', '');
 
         try {
             $this->productService->updateProduct($this->user, $params);
@@ -339,13 +345,27 @@ class ProductController extends Controller
         $param['market_name'] = $request->input('market_name');
 
         try {
+            foreach ($param['product_ids'] as $item) {
+                $v = Validator::make($item, [
+                    'user_product_id' => 'required|numeric',
+                    'cost_price' => 'required|numeric',
+                    'supply_price' => 'required|numeric',
+                    'selling_price' => 'required|numeric',
+                ]);
+
+                if ($v->fails()) {
+                    Log::info(__FILE__.'('.__LINE__.'), product list validate fail', [
+                        'location' => $v->messages()->toJson(JSON_UNESCAPED_SLASHES),
+                    ]);
+                    throw new ProductException(ProductException::PRODUCT_PARAM_VALID, ProductException::DEFAULT_CODE + 11);
+                }
+            }
             $result = $this->productService->shareProduct($this->user, $param);
-            $result['url'] = 'http://www.baidu.com';
+            $result['url'] = '';
         } catch (Exception $e) {
             return response()->clientFail($e->getCode(), $e->getMessage());
         }
 
         return response()->clientSuccess($result);
-
     }
 }

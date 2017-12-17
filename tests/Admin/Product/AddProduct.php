@@ -55,6 +55,7 @@ class AuthTest extends TestCase
             "supply_price" => 56,
             "selling_price" => 60,
             "stock_num" => 100,
+            "stock_unit" => '件',
             "min_sell_num" => 10,
             "detail" => "2342", //产品详情
             "sale_type" => 2, //1 立即上架 2 暂不上架

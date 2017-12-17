@@ -25,12 +25,12 @@ class ProductService implements ProductInterface
     {
         $query = ShareDetail::where('share_id', $shareId);
         $shareDetailCollection = $paginator->query($query);
-        $productIds = $shareDetailCollection->pluck('product_id');
-        $products = Product::whereIn('id', $productIds)->get();
-        $classIds = $products->pluck('class_id');
-        $userProducts = UserProduct::whereIn('product_id', $productIds)
+        $userProductIds = $shareDetailCollection->pluck('user_product_id');
+        $userProducts = UserProduct::whereIn('id', $userProductIds)
             ->where('status', UserProduct::STATUS_ONLINE)
             ->get();
+        $products = Product::whereIn('id', $userProducts->pluck('product_id')->toArray())->get();
+        $classIds = $products->pluck('class_id');
         $classCollection = ProductClass::whereIn('id', $classIds)->get();
         $rs = [];
         foreach ($products as $item) {
@@ -39,6 +39,7 @@ class ProductService implements ProductInterface
             $className = empty($class) ? '' : $class->name;
             $e = $item->export();
             $e['class_name'] = $className;
+            $e['user_product_id'] = $userProduct->id;
             if (empty($userProduct)) {
                 continue;
             }

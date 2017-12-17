@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Components\Paginator;
 use App\Exceptions\Admin\User\AdminUserException;
 use App\Models\Order;
-use App\Models\Product;
 use App\Models\Share;
 use App\Models\User;
 use App\Models\UserProduct;

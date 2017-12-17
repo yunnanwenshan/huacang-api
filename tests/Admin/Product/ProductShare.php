@@ -44,7 +44,21 @@ class AuthTest extends TestCase
         $request_body = [
             "market_name" => "商城名称",
             "share_id" => 12,
-            "product_ids" => [4,8, 5]
+//            "product_ids" => [4,8, 5]
+        "product_ids" => [
+            [
+                'user_product_id' => 4,
+                'cost_price' => 100,
+                'supply_price' => 200,
+                'selling_price' => 300,
+            ],
+            [
+                'user_product_id' => 5,
+                'cost_price' => 400,
+                'supply_price' => 500,
+                'selling_price' => 600,
+            ]
+        ]
         ];
 
         $result = json_decode((string)$response->getBody(), true);

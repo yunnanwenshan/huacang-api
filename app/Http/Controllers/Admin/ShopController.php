@@ -35,18 +35,11 @@ class ShopController extends Controller
      */
     public function marketNameList(Request $request)
     {
-        $this->validate($request, [
-            'page_size' => 'required|numeric',
-            'page_index' => 'required|numeric',
-        ]);
-
         $user = $this->user;
 
         try {
-            $paginator = new Paginator($request);
-            $shares = Share::where('user_id', $user->id);
-            $shareCollection = $paginator->query($shares);
-            $rs = $shareCollection->map(function ($item) {
+            $shares = Share::where('user_id', $user->id)->get();
+            $rs = $shares->map(function ($item) {
                 $e['share_id'] = $item->id;
                 $e['name'] = $item->name;
                 return $e;
@@ -56,7 +49,7 @@ class ShopController extends Controller
         } catch (Exception $e) {
             return response()->clientFail($e->getCode(), $e->getMessage());
         }
-        return response()->clientSuccess(['list' => $result, 'page' => $paginator->export()]);
+        return response()->clientSuccess(['list' => $result]);
     }
 
     /**

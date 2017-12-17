@@ -13,7 +13,6 @@ use App\Models\Template;
 use App\Models\TemplateFormItem;
 use App\Models\UserProduct;
 use App\Services\Product\Contract\ProductInterface;
-use Carbon\Carbon;
 use Log;
 
 class ProductService implements ProductInterface
@@ -33,16 +32,20 @@ class ProductService implements ProductInterface
         $classIds = $products->pluck('class_id');
         $classCollection = ProductClass::whereIn('id', $classIds)->get();
         $rs = [];
-        foreach ($products as $item) {
-            $class = $classCollection->where('id', $item->class_id)->first();
-            $userProduct = $userProducts->where('product_id', $item->id)->first();
-            $className = empty($class) ? '' : $class->name;
-            $e = $item->export();
-            $e['class_name'] = $className;
-            $e['user_product_id'] = $userProduct->id;
+        foreach ($shareDetailCollection as $item) {
+            $userProduct = $userProducts->where('id', $item->user_product_id)->first();
             if (empty($userProduct)) {
                 continue;
             }
+            $product = $products->where('id', $userProduct->product_id)->first();
+            $class = $classCollection->where('id', $product->class_id)->first();
+            $className = empty($class) ? '' : $class->name;
+            $e = $product->export();
+            $e['class_name'] = $className;
+            $e['user_product_id'] = $userProduct->id;
+            $e['cost_price'] = $item->cost_price;
+            $e['supply_price'] = $item->supply_price;
+            $e['selling_price'] = $item->selling_price;
             $rs[] = array_merge($e, $userProduct->export());
         }
 
@@ -139,6 +142,12 @@ class ProductService implements ProductInterface
             $productDetail = $product->export();
         }
 
-        return array_merge($productDetail, $userProduct->export());
+        $rs = array_merge($productDetail, $userProduct->export());
+        $shareDetail = ShareDetail::where('user_product_id', $userProductId)->first();
+        $rs['cost_price'] = $shareDetail->cost_price;
+        $rs['supply_price'] = $shareDetail->supply_price;
+        $rs['selling_price'] = $shareDetail->selling_price;
+
+        return $rs;
     }
 }

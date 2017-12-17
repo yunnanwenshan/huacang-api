@@ -60,12 +60,14 @@ class ProductController extends Controller
     {
         $this->validate($request, [
             'user_product_id' => 'required|numeric',
+            'share_id' => 'required|numeric',
         ]);
 
         $userProductId = $request->input('user_product_id');
+        $shareId = $request->input('share_id');
 
         try {
-            $result = $this->productService->productDetail($userProductId);
+            $result = $this->productService->productDetail($userProductId, $shareId);
         } catch (Exception $e) {
             return response()->clientFail($e->getCode(), $e->getMessage());
         }

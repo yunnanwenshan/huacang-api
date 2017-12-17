@@ -44,6 +44,7 @@ class AddTemplateTest extends TestCase
 //
         $request_body = [
             'user_product_id' => 4,
+            'share_id' => 12,
         ];
 //        $result = json_decode((string)$response->getBody(), true);
 //        print_r($result);

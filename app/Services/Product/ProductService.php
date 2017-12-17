@@ -101,7 +101,7 @@ class ProductService implements ProductInterface
     /**
      * 商品详情
      */
-    public function productDetail($userProductId)
+    public function productDetail($userProductId, $shareId)
     {
         $userProduct = UserProduct::where('id', $userProductId)->first();
         if (empty($userProduct)) {
@@ -143,7 +143,7 @@ class ProductService implements ProductInterface
         }
 
         $rs = array_merge($productDetail, $userProduct->export());
-        $shareDetail = ShareDetail::where('user_product_id', $userProductId)->first();
+        $shareDetail = ShareDetail::where('share_id', $shareId)->where('user_product_id', $userProductId)->first();
         $rs['cost_price'] = $shareDetail->cost_price;
         $rs['supply_price'] = $shareDetail->supply_price;
         $rs['selling_price'] = $shareDetail->selling_price;

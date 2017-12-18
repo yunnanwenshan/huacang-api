@@ -54,9 +54,8 @@ class OrderService implements OrderInterface
             ]);
             throw new OrderException(OrderException::ORDER_PRODUCT_OFFLINE, OrderException::DEFAULT_CODE + 7);
         }
-        $productIds = $userProducts->pluck('product_id')->toArray();
         $shareDetailList = ShareDetail::where('share_id', $share->id)
-            ->whereIn('product_id', $productIds)
+            ->whereIn('user_product_id', $userProductIds)
             ->get();
         $shareCount = $shareDetailList->count();
         if ($count != $shareCount) {

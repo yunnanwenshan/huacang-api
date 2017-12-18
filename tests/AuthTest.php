@@ -8,7 +8,9 @@ class AuthTest extends TestCase
     private $jar;
 
     const LOCAL_SERVER = 'http://localhost:8888';
-    static $current_server = self::LOCAL_SERVER;
+    const TEST_SERVER = 'http://test-api.huacang.com:8889';
+    const SERVER = 'http://api.huacang.com:8888';
+    static $current_server = self::TEST_SERVER;
 
     public function __construct()
     {

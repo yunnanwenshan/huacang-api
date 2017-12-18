@@ -6,6 +6,7 @@ use App\Components\Paginator;
 use App\Models\Product;
 use App\Models\Share;
 use App\Models\ShareDetail;
+use App\Models\UserProduct;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Exception;
@@ -87,15 +88,30 @@ class ShopController extends Controller
             $shareCollection = $paginator->queryArray($shops);
             $shareIds = $shareCollection->pluck('id');
             $shareDetailCollection = ShareDetail::whereIn('share_id', $shareIds->toArray())->get();
-            $productCollection = Product::whereIn('id', $shareDetailCollection->pluck('product_id')->toArray())->get();
-            $rs = $shareCollection->map(function ($item) use ($shareDetailCollection, $productCollection) {
+            $userProductIds = $shareDetailCollection->pluck('user_product_id')->toArray();
+            $userProducts = UserProduct::whereIn('id', $userProductIds)->get();
+            $productCollection = Product::whereIn('id', $userProducts->pluck('product_id')->toArray())->get();
+            $rs = $shareCollection->map(function ($item) use ($shareDetailCollection, $userProducts, $productCollection) {
                 $e['share_id'] = $item->id;
                 $e['name'] = $item->name;
                 $e['update_time'] = (new Carbon($item->update_time))->format('Y-m-d H:i:s');
                 $shareDetail = $shareDetailCollection->where('share_id', $e['share_id']);
-                $e['products'] = array_values($shareDetail->map(function ($it) use ($productCollection) {
+                $e['products'] = array_values($shareDetail->map(function ($it) use ($userProducts, $productCollection) {
                     $e = $it->export();
-                    $product = $productCollection->where('id', $it->product_id)->first();
+                    $userProduct = $userProducts->where('id', $it->user_product_id)->first();
+                    if (empty($userProduct)) {
+                        Log::info(__FILE__ . '(' . __LINE__ . '), user product is null, ', [
+                            'it' => $it,
+                        ]);
+                        return [];
+                    }
+                    $product = $productCollection->where('id', $userProduct->product_id)->first();
+                    if (empty($product)) {
+                        Log::info(__FILE__ . '(' . __LINE__ . '), product is null, ', [
+                            'it' => $it,
+                        ]);
+                        return [];
+                    }
                     $e['product_name'] = $product->name;
                     return $e;
                 })->toArray());

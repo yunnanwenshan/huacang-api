@@ -14,7 +14,7 @@ class ShareDetail extends Model
     public function export()
     {
         return [
-            'product_id' => $this->product_id,
+            'user_product_id' => $this->user_product_id,
             'cost_price' => $this->cost_price,
             'supply_price' => $this->supply_price,
             'update_time' => (new Carbon($this->update_time))->format('Y-m-d H:i:s'),

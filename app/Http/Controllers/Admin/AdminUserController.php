@@ -52,7 +52,7 @@ class AdminUserController extends Controller
             }
             $shareIds = $shares->pluck('id')->toArray();
             $orders = Order::whereIn('share_id', $shareIds)
-                ->where('status', Order::STATUS_FINISHED)
+//                ->where('status', Order::STATUS_FINISHED)
                 ->groupBy('user_id')
                 ->groupBy('share_id')
                 ->select('share_id', 'user_id', DB::raw('sum(total_fee) as total_fee'))

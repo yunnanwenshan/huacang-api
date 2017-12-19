@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Validator;
 use Log;
 use Cache;
+use Redis;
 
 class UserController extends Controller
 {
@@ -93,6 +94,16 @@ class UserController extends Controller
         $input = $request->input();
         $mobile = strval($input['mobile']);
         try {
+            $limitMobileKey = 'rate_limit_' . $mobile;
+            $mobileNum = Redis::get($limitMobileKey);
+            if (!empty($mobileNum)) {
+                Log::info('===========================mobile', ['mobileNum' => $mobileNum]);
+                throw new Exception('发送短信太频繁，1分钟之后再重试', 1);
+            }
+            Redis::transaction(function ($tx) use ($limitMobileKey) {
+                $tx->set($limitMobileKey, 1);
+                $tx->expire($limitMobileKey, 60); //过期时间一天
+            });
             $result = $this->userAuth->sendCode($mobile);
         } catch (UserException $e) {
             return response()->clientFail($e->getCode(), $e->getMessage());

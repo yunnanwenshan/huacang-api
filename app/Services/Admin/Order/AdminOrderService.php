@@ -151,7 +151,7 @@ class AdminOrderService implements AdminOrderInterface
         }
 
         $userProducts = UserProduct::whereIn('id', $userProductIds)
-            ->select('id', 'product_id')
+            ->select('id', 'product_id', 'stock_unit')
             ->get();
         $userProductIds = $userProducts->pluck('product_id')->toArray();
         $products = Product::whereIn('id', $userProductIds)
@@ -190,6 +190,8 @@ class AdminOrderService implements AdminOrderInterface
                 $prd = $products->where('id', $pd->product_id)->first();
                 $pItem['price'] = $pr['price'];
                 $pItem['count'] = $pr['count'];
+                Log::info('============', ['pd' => $pd]);
+                $pItem['stock_unit'] = $pd->stock_unit;
                 $pItem['img'] = '';
                 $pItem['name'] = '';
                 if (!empty($prd)) {

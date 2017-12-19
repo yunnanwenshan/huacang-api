@@ -346,8 +346,22 @@ class OrderService implements OrderInterface
             'order_id' => $orderSn,
             'rs' => $rs,
         ]);
+        $rs = $order->export();
+        $userProductIds = array_pluck($rs['product_list'], 'user_product_id');
+        $userProducts = UserProduct::whereIn('id', $userProductIds)->get();
+        $result = [];
+        foreach ($rs['product_list'] as $item) {
+            $userProduct = $userProducts->where('id', $item['user_product_id'])->first();
+            $item['stock_unit'] = '';
+            if (!empty($userProduct)) {
+                $item['stock_unit'] = $userProduct->stock_unit;
+            }
+            $result[] = $item;
+        }
 
-        return $order->export();
+        $rs['product_list'] = $result;
+
+        return $rs;
     }
 
     /**
@@ -365,7 +379,7 @@ class OrderService implements OrderInterface
         }
 
         $userProducts = UserProduct::whereIn('id', $userProductIds)
-            ->select('id', 'product_id')
+            ->select('id', 'product_id', 'stock_unit')
             ->get();
         $userProductIds = $userProducts->pluck('product_id')->toArray();
         $products = Product::whereIn('id', $userProductIds)
@@ -388,6 +402,7 @@ class OrderService implements OrderInterface
                 $prd = $products->where('id', $pd->product_id)->first();
                 $pItem['price'] = $pr['price'];
                 $pItem['count'] = $pr['count'];
+                $pItem['stock_unit'] = $pd->stock_unit;
                 $pItem['img'] = '';
                 $pItem['name'] = '';
                 if (!empty($prd)) {

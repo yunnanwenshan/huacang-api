@@ -43,6 +43,7 @@ class ProductService implements ProductInterface
             $e = $product->export();
             $e['class_name'] = $className;
             $e['user_product_id'] = $userProduct->id;
+            $e['stock_unit'] = $userProduct->stock_unit;
             $e['cost_price'] = $item->cost_price;
             $e['supply_price'] = $item->supply_price;
             $e['selling_price'] = $item->selling_price;

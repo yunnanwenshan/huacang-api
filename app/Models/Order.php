@@ -37,6 +37,7 @@ class Order extends Model
     public function export()
     {
         return [
+            'sn' => $this->sn,
             'user_id' => $this->user_id,
             'share_id' => $this->share_id,
             'supplier_id' => $this->supplier_id,

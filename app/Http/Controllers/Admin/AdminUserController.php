@@ -82,8 +82,9 @@ class AdminUserController extends Controller
                     'market_name' => $share->name,
                 ];
                 $e['user'] = [
-                    'client_id' => $item->user_id,
-                    'user_name' => empty($item->user_name) ? '' : $item->user_name,
+                    'client_id' => $user->id,
+                    'user_name' => empty($user->user_name) ? '' : $user->user_name,
+                    'mobile' => $user->mobile,
                 ];
                 $e['client_id'] = $item->user_id;
                 $e['mobile'] = $user->mobile;

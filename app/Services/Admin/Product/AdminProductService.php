@@ -260,7 +260,7 @@ class AdminProductService implements AdminProductInterface
     */
     public function productList(&$user, array $productParam, Paginator $paginator)
     {
-        $sql = 'select pr.id, pr.user_id, pr.name, pr.code, pr.class_id, pr.brand_id, up.id as user_product_id, up.cost_price, up.min_sell_num, up.supply_price, up.selling_price, up.stock_num, up.update_time, up.status from product pr INNER JOIN user_product up on pr.id = up.product_id where pr.user_id = ?';
+        $sql = 'select pr.id, pr.user_id, pr.name, pr.code, pr.class_id, pr.brand_id, up.id as user_product_id, up.stock_unit, up.cost_price, up.min_sell_num, up.supply_price, up.selling_price, up.stock_num, up.update_time, up.status from product pr INNER JOIN user_product up on pr.id = up.product_id where pr.user_id = ?';
         //产品id
         if (!empty($productParam['product_id'])) {
             $sql = $sql . ' and pr.id = ' . $productParam['product_id'];
@@ -337,6 +337,7 @@ class AdminProductService implements AdminProductInterface
             $e['supply_price'] = $item->supply_price;
             $e['selling_price'] = $item->selling_price;
             $e['stock_num'] = $item->stock_num;
+            $e['stock_unit'] = $item->stock_unit;
             $e['min_sell_num'] = 0;
             $e['update_time'] = (new Carbon($item->update_time))->format('Y-m-d H:i:s');
             $class = $classeCollection->where('id', $item->class_id)->first();

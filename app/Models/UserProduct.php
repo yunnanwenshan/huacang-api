@@ -26,6 +26,7 @@ class UserProduct extends Model
             'selling_price' => $this->selling_price,
             'stock_num' => $this->stock_num,
             'min_sell_num' => $this->min_sell_num,
+            'stock_unit' => $this->stock_unit,
             'update_time' => (new Carbon($this->update_time))->format('Y-m-d H:i:s'),
             'status' => $this->status,
             'recommend' => $this->recommend,

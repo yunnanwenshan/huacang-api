@@ -42,6 +42,7 @@ class ProductController extends Controller
         try {
             $paginator = new Paginator($request);
             $result = $this->productService->productList($shareId, $paginator);
+            $result['page'] = $paginator->export();
         } catch (Exception $e) {
             return response()->clientFail($e->getCode(), $e->getMessage());
         }

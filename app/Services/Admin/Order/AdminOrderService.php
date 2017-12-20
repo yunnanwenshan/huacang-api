@@ -103,7 +103,7 @@ class AdminOrderService implements AdminOrderInterface
         $affectRow = Order::where('sn', $orderSn)
             ->whereIn('share_id', $shares->pluck('id')->toArray())
             ->where('status', '!=', $status)
-            ->update(['status' => $status]);
+            ->update(['status' => $status, 'end_time' => Carbon::now()]);
 
         Log::info(__FILE__ . '(' . __LINE__ . '), update order successful, ', [
             'user_id' => $user->id,

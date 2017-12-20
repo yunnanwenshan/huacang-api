@@ -568,7 +568,7 @@ class AdminProductService implements AdminProductInterface
             $share = new Share();
             $share->user_id = $user->id;
             $share->name = $params['market_name'];
-            $share->url = ''; //TODO:是否想要写商城url地址
+            $share->url = '';
             $share->save();
 
             $userShares = $params['product_ids'];
@@ -651,14 +651,34 @@ class AdminProductService implements AdminProductInterface
         if (empty($productIds)) {
             throw new \Exception('user_product_id为空', 1);
         }
-        $userProductsCollection = UserProduct::whereIn('id', $productIds)->get();
+        $userProductsCollection = UserProduct::where('user_id', $user->id)
+            ->whereIn('id', $productIds)
+            ->get();
         if ($userProductsCollection->count() != count($productIds)) {
             Log::info(__FILE__ . '(' . __LINE__ . '), share product error 2, ', [
                 'user_id' => $user->id,
                 'params' => $params,
+                'userProductsCollection' => $userProductsCollection,
             ]);
             throw new ProductException(ProductException::PRODUCT_PARAM_VALID, ProductException::DEFAULT_CODE + 12);
         }
+
+        //检查所有商品是否都已上架
+        $notOnlineProductsIds = [];
+        foreach ($userProductsCollection as $item) {
+            if (!in_array($item->status, [UserProduct::STATUS_ONLINE])) {
+                $notOnlineProductsIds[] = $item->id;
+            }
+        }
+        if (count($notOnlineProductsIds)) {
+            Log::info(__FILE__ . '(' . __LINE__ . '), share product error 3, ', [
+                'user_id' => $user->id,
+                'params' => $params,
+                'notOnlineProductsIds' => $notOnlineProductsIds,
+            ]);
+            throw new ProductException(ProductException::PRODUCT_NOT_ONLINE . implode(',', $notOnlineProductsIds), ProductException::DEFAULT_CODE + 13);
+        }
+
 
         return $userProductsCollection;
     }

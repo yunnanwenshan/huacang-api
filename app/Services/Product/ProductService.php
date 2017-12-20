@@ -22,32 +22,31 @@ class ProductService implements ProductInterface
      */
     public function productList($shareId, Paginator $paginator)
     {
-        $query = ShareDetail::where('share_id', $shareId);
-        $shareDetailCollection = $paginator->query($query);
-        $userProductIds = $shareDetailCollection->pluck('user_product_id');
-        $userProducts = UserProduct::whereIn('id', $userProductIds)
-            ->where('status', UserProduct::STATUS_ONLINE)
-            ->get();
+        $shareDetailColltion = ShareDetail::where('share_id', $shareId)->select('user_product_id')->get();
+        $userProductIds = $shareDetailColltion->pluck('user_product_id');
+        $userProductsQuery = UserProduct::whereIn('id', $userProductIds)
+            ->where('status', UserProduct::STATUS_ONLINE);
+        $userProducts = $paginator->query($userProductsQuery);
         $products = Product::whereIn('id', $userProducts->pluck('product_id')->toArray())->get();
         $classIds = $products->pluck('class_id');
         $classCollection = ProductClass::whereIn('id', $classIds)->get();
         $rs = [];
-        foreach ($shareDetailCollection as $item) {
-            $userProduct = $userProducts->where('id', $item->user_product_id)->first();
-            if (empty($userProduct)) {
+        foreach ($userProducts as $item) {
+            $shareDetail = $shareDetailColltion->where('user_product_id', $item->id)->first();
+            if (empty($shareDetail)) {
                 continue;
             }
-            $product = $products->where('id', $userProduct->product_id)->first();
+            $product = $products->where('id', $item->product_id)->first();
             $class = $classCollection->where('id', $product->class_id)->first();
             $className = empty($class) ? '' : $class->name;
             $e = $product->export();
             $e['class_name'] = $className;
-            $e['user_product_id'] = $userProduct->id;
-            $e['stock_unit'] = $userProduct->stock_unit;
-            $e['cost_price'] = $item->cost_price;
-            $e['supply_price'] = $item->supply_price;
-            $e['selling_price'] = $item->selling_price;
-            $rs[] = array_merge($e, $userProduct->export());
+            $e['user_product_id'] = $item->id;
+            $e['stock_unit'] = $item->stock_unit;
+            $e['cost_price'] = $shareDetail->cost_price;
+            $e['supply_price'] = $shareDetail->supply_price;
+            $e['selling_price'] = $shareDetail->selling_price;
+            $rs[] = array_merge($e, $item->export());
         }
 
         Log::info(__FILE__ . '(' . __LINE__  .'), product list successful, ', [

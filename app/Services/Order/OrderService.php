@@ -146,7 +146,8 @@ class OrderService implements OrderInterface
                 $clientInfo = new ClientInfo();
                 $clientInfo->user_id = $share->user_id;
                 $clientInfo->client_id = $user->id;
-                $clientInfo->name = $share->name;
+                $clientInfo->mobile = $user->mobile;
+                $clientInfo->name = $user->user_name;
                 $clientInfo->save();
             }
             DB::commit();

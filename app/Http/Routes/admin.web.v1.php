@@ -158,10 +158,14 @@ Route::group([
 
  ******************************************************************************/
 Route::group([
-    'prefix'        => 'admin/v1',
+    'prefix'        => 'admin/v1/client',
     'namespace'     => 'Admin',
     'middleware'    => ['admin_wauth'],
 ], function () {
     // 商家用户列表
-    Route::any('client/list',                       ['uses' => 'AdminUserController@userList',          'middleware' => 'admin_wauth.kol']);
+    Route::any('list',                       ['uses' => 'AdminUserController@userList',          'middleware' => 'admin_wauth.kol']);
+    // 商家单个用户列表
+    Route::any('info',                       ['uses' => 'AdminUserController@clientInfo',        'middleware' => 'admin_wauth.kol']);
+    // 商家单个用户信息
+    Route::any('info/update',                ['uses' => 'AdminUserController@updateClientInfo',   'middleware' => 'admin_wauth.kol']);
 });

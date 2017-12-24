@@ -19,7 +19,7 @@ class UserException extends Exception
     const AUTH_INVALID_MOBILE     = '请输入正确的手机号码';    // DEFAULT_CODE + 3
     const AUTH_NET_FAIL           = '验证码发送失败，稍后重试';        // DEFAULT_CODE + 4
     const AUTH_CODE_EXPIRE        = '验证码已过期';     // DEFAULT_CODE + 5
-    const AUTH_USER_NOT_EXIST     = '用户不存在';    // DEFAULT_CODE + 6, 42, 43
+    const AUTH_USER_NOT_EXIST     = '用户不存在';    // DEFAULT_CODE + 6, 42, 43, 48
     const AUTH_USER_CERTIFIED     = '已实名认证，用户名不允许修改';    // DEFAULT_CODE + 7
     const AUTH_CERTIFICATE_PARAM  = '实名认证信息有误';     // DEFAULT_CODE + 8
     const AUTH_CERTIFICATE_FAIL   = '实名认证失败';     // DEFAULT_CODE + 9
@@ -54,7 +54,9 @@ class UserException extends Exception
     const USER_ONE_MINUTE_NOT_REPEAT_SEND = '验证码1分钟内不能重复发送'; //DEFAULT_CODE + 43
     const USER_SEND_SMS_LIMITED = "验证码获取次数已达今日上限，如有疑问，请联系客服"; //DEFAULT_CODE + 44
     const ADMIN_USER_LOGIN_NOT_EXIST = '用户名不存在'; //DEFAULT_CODE + 45
-    const ADMIN_USER_PASSWORD_ERROR = '用户名不存在'; //DEFAULT_CODE + 46
+    const ADMIN_USER_PASSWORD_ERROR = '用户名不存在'; //DEFAULT_CODE + 4
+    const ADMIN_CLIENT_INFO_NOT_EXIST = '用户信息不存在'; //DEFAULT_CODE + 47
+    const ADMIN_CLIENT_INFO_UPDATE_FAIL = '用户信息更新失败'; //DEFAULT_CODE + 49
 
     public function __construct($message = '', $code = 0, $previous = null)
     {

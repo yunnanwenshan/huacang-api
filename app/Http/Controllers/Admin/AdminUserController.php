@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Components\Paginator;
 use App\Exceptions\Admin\User\AdminUserException;
+use App\Exceptions\User\UserException;
+use App\Models\ClientInfo;
 use App\Models\Order;
 use App\Models\Share;
 use App\Models\User;
@@ -119,5 +121,89 @@ class AdminUserController extends Controller
         }
 
         return response()->clientSuccess(['page' => $paginator->export(), 'client_list' => $result]);
+    }
+
+    /**
+     * 用户信息表
+     *
+     * @param Request $request [description]
+     *
+     * @return Response [description]
+     */
+    public function clientInfo(Request $request)
+    {
+        $this->validate($request, [
+            'client_id' => 'required|numeric',
+        ]);
+        $clientId = $request->input('client_id');
+
+        try {
+            $clientInfo = ClientInfo::where('user_id', $this->user->id)->where('client_id', $clientId)->first();
+            if (empty($clientInfo)) {
+                throw new UserException(UserException::ADMIN_CLIENT_INFO_NOT_EXIST, UserException::DEFAULT_CODE + 47);
+            }
+            $user = User::where('id', $clientId)->first();
+            if (empty($user)) {
+                throw new UserException(UserException::AUTH_USER_NOT_EXIST, UserException::DEFAULT_CODE + 48);
+            }
+            $rs = $clientInfo->export();
+            $rs['user_name'] = empty($user->user_name) ? '' : $user->user_name;
+        } catch (Exception $e) {
+            return response()->clientFail($e->getCode(), $e->getMessage());
+        }
+        return response()->clientSuccess($rs);
+    }
+
+    /**
+     * 更新用户信息表数据
+     *
+     * @param Request $request [description]
+     *
+     * @return Response [description]
+     */
+    public function updateClientInfo(Request $request)
+    {
+        $this->validate($request, [
+            'client_id' => 'required|numeric',
+            'mobile' => 'sometimes',
+            'name' => 'sometimes|string',
+            'remark' => 'sometimes|string',
+        ]);
+        $clientId = $request->input('client_id');
+        $mobile = $request->input('mobile');
+        $name = $request->input('name');
+        $remark = $request->input('remark');
+
+        try {
+            $params = [];
+            if (!empty($mobile)) {
+                $params['mobile'] = $mobile;
+            }
+            if (!empty($name)) {
+                $params['name'] = $name;
+            }
+            if (!empty($remark)) {
+                $params['remark'] = $remark;
+            }
+            if (!empty($params)) {
+                $affectRow = ClientInfo::where('user_id', $this->user->id)
+                    ->where('client_id', $clientId)
+                    ->limit(1)
+                    ->update($params);
+                if ($affectRow == 0) {
+                    throw new UserException(UserException::ADMIN_CLIENT_INFO_UPDATE_FAIL, UserException::DEFAULT_CODE + 49);
+                }
+                Log::info(__FILE__ . '(' . __LINE__ . '), update client info successful, ', [
+                    'user_id' => $this->user->id,
+                    'client_id' => $clientId,
+                    'affectRow' => $affectRow,
+                    'mobile' => $mobile,
+                    'name' => $name,
+                ]);
+            }
+        } catch (Exception $e) {
+            return response()->clientFail($e->getCode(), $e->getMessage());
+        }
+        return response()->clientSuccess();
     }
 }

@@ -4,6 +4,7 @@ namespace App\Services\Order;
 use App\Components\GenerateID;
 use App\Components\Paginator;
 use App\Exceptions\Order\OrderException;
+use App\Models\ClientInfo;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Share;
@@ -136,6 +137,18 @@ class OrderService implements OrderInterface
             $order->order_detail = json_encode($detail);
             $order->start_time = Carbon::now();
             $order->save();
+
+            //5. 存在客户与商家关系信息
+            $clientInfo = ClientInfo::where('user_id', $share->user_id)
+                ->where('client_id', $user->id)
+                ->first();
+            if (empty($clientInfo)) {
+                $clientInfo = new ClientInfo();
+                $clientInfo->user_id = $share->user_id;
+                $clientInfo->client_id = $user->id;
+                $clientInfo->name = $share->name;
+                $clientInfo->save();
+            }
             DB::commit();
 
             Log::info(__FILE__ . '(' . __LINE__ . '), create order successful, ', [

@@ -2,14 +2,12 @@
 
 use GuzzleHttp\Client;
 
-class AuthTest extends TestCase
+class AddTemplateTest extends TestCase
 {
     private $client;
     private $jar;
 
-    const LOCAL_SERVER = 'http://localhost:8888';
-    const TEST_SERVER = 'http://test-api.huacang.com:8889';
-    const SERVER = 'http://api.huacang.com:8888';
+    const LOCAL_SERVER = 'http://127.0.0.1:8888';
     static $current_server = self::LOCAL_SERVER;
 
     public function __construct()
@@ -23,14 +21,14 @@ class AuthTest extends TestCase
     public function testUserLogin()
     {
         $request_body = [
-            'mobile' => '10000000000',
-            'code' => 1234,
+            'user_name' => 'ltptest123456',
+            'password' => 123456,
         ];
         $request_header = [
             'Content-Type' => 'application/json; charset=UTF-8',
         ];
 
-        $response = $this->client->request('POST', static::$current_server.'/web/v1/user/login', [
+        $response = $this->client->request('POST', static::$current_server.'/admin/v1/user/login', [
             'headers'           => $request_header,
             'allow_redirects'   => false,
             'json'              => $request_body,
@@ -42,9 +40,11 @@ class AuthTest extends TestCase
         }
 
         print_r($response->getBody()->getContents());
-        print_r($response->getHeaders());
 
-        $request_body = '';
+        $request_body = [
+            'template_id' => 1,
+        ];
+
         $result = json_decode((string)$response->getBody(), true);
         print_r($result);
         if (json_last_error()) {
@@ -56,7 +56,7 @@ class AuthTest extends TestCase
             'Server-Token' => $result['ticket'],
         ];
 
-        $response = $this->client->request('POST', self::$current_server . '/web/v1/user/detail', [
+        $response = $this->client->request('POST', self::$current_server . '/admin/v1/template/delete', [
             'headers'           => $request_header,
             'allow_redirects'   => false,
             'json'              => $request_body,

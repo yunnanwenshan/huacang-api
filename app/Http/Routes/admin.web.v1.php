@@ -29,6 +29,10 @@ Route::group([
     'namespace'     => 'Admin',
     'middleware'    => ['admin_wauth'],
 ], function () {
+    // 模版删除
+    Route::any('update',          ['uses' => 'TemplateController@updateTemplate',     'middleware' => 'admin_wauth.kol']);
+    // 模版编辑
+    Route::any('delete',          ['uses' => 'TemplateController@deleteTemplate',     'middleware' => 'admin_wauth.kol']);
     // 增加模版
     Route::any('add',             ['uses' => 'TemplateController@addTemplate',        'middleware' => 'admin_wauth.kol']);
     // 模版列表

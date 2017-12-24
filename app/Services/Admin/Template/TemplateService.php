@@ -17,6 +17,106 @@ use Log;
 class TemplateService implements TemplateInterface
 {
     /**
+     * 模版更新
+     *
+     * @param Request $request [description]
+     *
+     * @return Response [description]
+     */
+    public function updateTemplate(&$user, $templateId, $name, $className, $formList)
+    {
+        try {
+            DB::begintransaction();
+
+            //检查模版是否存在
+            $template = Template::where('user_id', $user->id)->where('id', $templateId)->first();
+            if (empty($template)) {
+                throw new TemplateException(TemplateException::TEMPLATE_NOT_EXIST, TemplateException::DEFAULT_CODE + 3);
+            }
+
+            //检查模版名称是否存在
+            $templateIsExist = Template::where('user_id', $user->id)->where('template_name', $name)->first();
+            if (!empty($templateIsExist) && ($templateIsExist->id != $template->id)) {
+                throw new TemplateException(TemplateException::TEMPLATE_NAME_EXIST, TemplateException::DEFAULT_CODE + 5);
+            }
+
+            //增加分类
+            $class = ProductClass::where('user_id', $user->id)->where('name', $className)->first();
+            if (empty($class)) {
+                $class = new ProductClass();
+                $class->name = $className;
+                $class->parent_id = 0;
+                $class->type = ProductClass::TYPE_TEMPLATE;
+                $class->user_id = $user->id;
+                $class->save();
+            }
+
+            $template->template_name = $name;
+            $template->class_id = $class->id;
+            $template->status = Template::STATUS_ENABLE;
+            $template->save();
+
+            //模版详情
+            $templateFormList = TemplateFormItem::where('template_id', $templateId)->first();
+            if (empty($templateFormList)) {
+                throw new TemplateException(TemplateException::TEMPLATE_NOT_EXIST, TemplateException::DEFAULT_CODE + 6);
+            }
+            $templateFormList->template_id = $template->id;
+            $templateFormList->form_name = $name;
+            $templateFormList->form_content = json_encode($formList);
+            $templateFormList->save();
+
+            DB::commit();
+
+            Log::Info(__FILE__ . '(' . __LINE__ . '), add template successful, ', [
+                'user_id' => $user->id,
+                'name' => $name,
+                'class_name' => $className,
+                'form_list' => $formList,
+            ]);
+        } catch (Exception $e) {
+            DB::rollback();
+            Log::error(__FILE__ . '(' . __LINE__ . '), update template fail, ', [
+                'template_id' => $templateId,
+                'user_id' => $user->id,
+                'name' => $name,
+                'class_name' => $className,
+                'form_list' => $formList,
+                'code' => $e->getCode(),
+                'message' => $e->getMessage(),
+            ]);
+            throw new TemplateException(TemplateException::TEMPLATE_UPDATE_FAIL, TemplateException::DEFAULT_CODE + 1);
+        }
+    }
+
+    /**
+     * 模版删除
+     *
+     * @param Request $request [description]
+     *
+     * @return Response [description]
+     */
+    public function deleteTemplate(&$user, $templateId)
+    {
+        $template = Template::where('id', $templateId)->where('user_id', $user->id)->first();
+        if (empty($template)) {
+            throw new TemplateException(TemplateException::TEMPLATE_NOT_EXIST, TemplateException::DEFAULT_CODE + 2);
+        }
+
+        $affectRow = Template::where('id', $templateId)
+            ->where('user_id', $user->id)
+            ->update(['status' => Template::STATUS_DISABLE]);
+        if ($affectRow == 0) {
+            throw new TemplateException(TemplateException::TEMPLATE_NOT_EXIST, TemplateException::DEFAULT_CODE + 3);
+        }
+        Log::info(__FILE__ . '(' . __LINE__ . '), template delete susccessufl, ', [
+            'user_id' => $user->id,
+            'template_id' => $templateId,
+            'affect_row' => $affectRow,
+        ]);
+    }
+
+    /**
      * 增加模版
      */
     public function addTemplate(&$user, $name, $className, $formList)

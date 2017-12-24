@@ -25,6 +25,60 @@ class TemplateController extends Controller
     }
 
     /**
+     * 模版更新
+     *
+     * @param Request $request [description]
+     *
+     * @return Response [description]
+     */
+    public function updateTemplate(Request $request)
+    {
+        $this->validate($request, [
+            'template_id' => 'required|numeric',
+            'name' => 'required|string',
+            'class_name' => 'required|string',
+            'form_list' => 'required|array',
+        ]);
+
+        $name = $request->input('name');
+        $className = $request->input('class_name');
+        $formList = $request->input('form_list');
+        $templateId = $request->input('template_id');
+
+        try {
+            $rs = $this->templateService->updateTemplate($this->user, $templateId, $name, $className, $formList);
+        } catch (Exception $e) {
+            return response()->clientFail($e->getCode(), $e->getMessage());
+        }
+
+        return response()->clientSuccess($rs);
+    }
+
+    /**
+     * 模版更新
+     *
+     * @param Request $request [description]
+     *
+     * @return Response [description]
+     */
+    public function deleteTemplate(Request $request)
+    {
+        $this->validate($request, [
+            'template_id' => 'required|numeric',
+        ]);
+
+        $templateId = $request->input('template_id');
+
+        try {
+            $this->templateService->deleteTemplate($this->user, $templateId);
+        } catch (Exception $e) {
+            return response()->clientFail($e->getCode(), $e->getMessage());
+        }
+
+        return response()->clientSuccess();
+    }
+
+    /**
      * 模版增加
      *
      * @param Request $request [description]

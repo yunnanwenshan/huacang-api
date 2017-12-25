@@ -386,6 +386,8 @@ class OrderService implements OrderInterface
         $orders = Order::where('user_id', $user->id);
         $orderCollection = $paginator->query($orders);
         $productDetail = $orderCollection->pluck('order_detail')->toArray();
+        $shareIds = $orderCollection->pluck('share_id')->toArray();
+        $sharesCollection = Share::whereIn('id', $shareIds)->get();
         $userProductIds = [];
         foreach ($productDetail as $pd) {
             $jsonPd = json_decode($pd, true);
@@ -427,6 +429,8 @@ class OrderService implements OrderInterface
             }
             $e = $order->export();
             $e['product_list'] = $productItem;
+            $share = $sharesCollection->where('id', $order->share_id)->first();
+            $e['market_name'] = empty($share) ? '' : $share->name;
             $rs[] = $e;
         }
 

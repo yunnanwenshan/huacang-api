@@ -150,7 +150,7 @@ class OrderController extends Controller
             return response()->clientFail($e->getCode(), $e->getMessage());
         }
 
-        return response()->clientSuccess(['order_list' => $result]);
+        return response()->clientSuccess(['order_list' => $result, 'page' => $paginator->export()]);
     }
 
     /**

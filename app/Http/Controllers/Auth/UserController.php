@@ -158,13 +158,15 @@ class UserController extends Controller
     {
         $this->validate($request, [
             'avatar' => 'sometimes|url',
-            'sex' => 'sometimes|in:1,2'
+            'sex' => 'sometimes|in:1,2',
+            'real_name' => 'sometimes|string|min:1',
         ]);
 
         try {
             $userId = is_null($this->user) ? 0 : $this->user->id;
             $userInfo['avatar'] = $request->input('avatar', '');
             $userInfo['sex'] = $request->input('sex', 0);
+            $userInfo['real_name'] = $request->input('real_name', '');
             $result = $this->userAuth->updateUserInfo($userId, $userInfo);
         } catch (UserException $e) {
             return response()->clientFail($e->getCode(), $e->getMessage());

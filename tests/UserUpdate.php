@@ -66,6 +66,7 @@ class AuthTest extends TestCase
         $request_body = [
             'avatar' => 'https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1514310797059&di=8683cf2326854378f79fc0188032cfd6&imgtype=0&src=http%3A%2F%2Fimgsrc.baidu.com%2Fimgad%2Fpic%2Fitem%2F728da9773912b31bc2fe74138d18367adab4e17e.jpg',
             'sex' => 1,
+            'real_name' => 'hello world'
         ];
 
         $response = $this->client->request('POST', self::$current_server . '/web/v1/user/updateinfo', [

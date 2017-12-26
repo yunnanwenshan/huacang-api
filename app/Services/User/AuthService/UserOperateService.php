@@ -212,6 +212,10 @@ class UserOperateService implements UserOperateInterface
                 $this->updateUserSex($userId, $userInfo['sex']);
             }
 
+            if (isset($userInfo['real_name']) && (!empty($userInfo['real_name']))) {
+                $this->updateUserRealName($userId, $userInfo['real_name']);
+            }
+
             DB::commit();
 
             Log::info(__FILE__ . '(' . __LINE__ . '), update user info successful, ', [
@@ -241,6 +245,13 @@ class UserOperateService implements UserOperateInterface
         UserInfo::where('user_id', $userId)
             ->limit(1)
             ->update(['gender' => $sex]);
+    }
+
+    private function updateUserRealName($userId, $realName)
+    {
+        UserInfo::where('user_id', $userId)
+            ->limit(1)
+            ->update(['real_name' => $realName]);
     }
 
     /**

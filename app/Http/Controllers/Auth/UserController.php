@@ -131,6 +131,8 @@ class UserController extends Controller
                 'user_id' => $result['user_id'],
                 'name' => $result['name'],
                 'avatar' => $result['avatar'],
+                'mobile' => $result['mobile'],
+                'sex' => $result['sex'],
             ];
 
             Log::info(__FILE__ . '(' . __LINE__ . '), user detail, ', [

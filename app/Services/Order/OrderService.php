@@ -349,9 +349,18 @@ class OrderService implements OrderInterface
         if (empty($order)) {
             Log::error(__FILE__ . '(' . __LINE__ . '), order is null, ', [
                 'user_id' => $user->id,
-                'order_id' => $orderSn,
+                'order_sn' => $orderSn,
             ]);
             throw new OrderException(OrderException::ORDER_NOT_EXIST, OrderException::DEFAULT_CODE + 4);
+        }
+
+        $share = Share::where('id', $order->share_id)->first();
+        if (empty($share)) {
+            Log::error(__FILE__ . '(' . __LINE__ . '), share is null, ', [
+                'user_id' => $user->id,
+                'order_sn' => $orderSn
+            ]);
+            throw new OrderException(OrderException::ORDER_MARKET_NOT_EXIST, OrderException::DEFAULT_CODE + 16);
         }
 
         $rs = $order->export();
@@ -363,6 +372,7 @@ class OrderService implements OrderInterface
         $rs = $order->export();
         $userProductIds = array_pluck($rs['product_list'], 'user_product_id');
         $userProducts = UserProduct::whereIn('id', $userProductIds)->get();
+        $products = Product::whereIn('id', $userProducts->pluck('product_id'))->get();
         $result = [];
         foreach ($rs['product_list'] as $item) {
             $userProduct = $userProducts->where('id', $item['user_product_id'])->first();
@@ -370,10 +380,16 @@ class OrderService implements OrderInterface
             if (!empty($userProduct)) {
                 $item['stock_unit'] = $userProduct->stock_unit;
             }
+            $product = $products->where('id', $userProduct->product_id)->first();
+            $item['name'] = '';
+            if (!empty($product)) {
+                $item['name'] = $product->name;
+            }
             $result[] = $item;
         }
 
         $rs['product_list'] = $result;
+        $rs['market_name'] = $share->name;
 
         return $rs;
     }

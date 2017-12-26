@@ -50,6 +50,8 @@ class User extends Model
             'user_id' => $this->idText,
             'avatar' => $userInfo->avatar,
             'name' => $userInfo->real_name,
+            'mobile' => $userInfo->mobile,
+            'sex' => $userInfo->gender,
         ];
     }
 }

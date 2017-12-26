@@ -23,7 +23,7 @@ class OrderException extends \Exception
     const ORDER_CANCEL = '订单已被取消'; // DEFAULT_CODE + 10
     const ORDER_FINISHED = '订单已完成'; // DEFAULT_CODE + 11
     const ORDER_NOT_ALLOWED_CANCEL = '订单状态不允许操作， 订单已完成'; // DEFAULT_CODE + 12
-    const ORDER_MARKET_NOT_EXIST = '商店不存在'; // DEFAULT_CODE + 13
+    const ORDER_MARKET_NOT_EXIST = '商店不存在'; // DEFAULT_CODE + 13, 16
     const ORDER_MARKET_NOT_GOOD = '有部分商品不在当前商店里'; // DEFAULT_CODE + 14
     const ORDER_TOTAL_FEE_NO_EQUAL = '总费用有误'; // DEFAULT_CODE + 15
 

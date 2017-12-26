@@ -202,20 +202,45 @@ class UserOperateService implements UserOperateInterface
      */
     public function updateUser($userId, array $userInfo)
     {
-        if (isset($userInfo['avatar']) && !is_null($userInfo['avatar'])) {
-            $this->updateUserAvatar($userId, $userInfo['avatar']);
-        }
+        try {
+            DB::begintransaction();
+            if (isset($userInfo['avatar']) && !empty($userInfo['avatar'])) {
+                $this->updateUserAvatar($userId, $userInfo['avatar']);
+            }
 
-        Log::info(__FILE__.'('.__LINE__.'), update user info successful, ', [
-            'user_id' => $userId,
-            'userInfo' => $userInfo,
-        ]);
+            if (isset($userInfo['sex']) && ($userInfo['sex'] != 0)) {
+                $this->updateUserSex($userId, $userInfo['sex']);
+            }
+
+            DB::commit();
+
+            Log::info(__FILE__ . '(' . __LINE__ . '), update user info successful, ', [
+                'user_id' => $userId,
+                'userInfo' => $userInfo,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error(__FILE__ . '(' . __LINE__ . '), update user info fail, ', [
+                'user_id' => $userId,
+                'user_info' => $userInfo,
+                'code' => $e->getCode(),
+                'msg' => $e->getMessage(),
+            ]);
+        }
     }
 
     private function updateUserAvatar($userId, $avatar)
     {
         UserInfo::where('user_id', $userId)
+            ->limit(1)
             ->update(['avatar' => $avatar]);
+    }
+
+    private function updateUserSex($userId, $sex)
+    {
+        UserInfo::where('user_id', $userId)
+            ->limit(1)
+            ->update(['gender' => $sex]);
     }
 
     /**

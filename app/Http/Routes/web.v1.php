@@ -18,6 +18,8 @@ Route::group([
     Route::any('certificate',       ['uses' => 'UserController@certificate',           'middleware' => 'wauth.kol']);
     // 用户详情
     Route::any('detail',            ['uses' => 'UserController@getUserInfo',           'middleware' => 'wauth.kol']);
+    // 用户信息更新
+    Route::any('updateinfo',        ['uses' => 'UserController@updateUserInfo',        'middleware' => 'wauth.kol']);
 });
 
 /******************************************************************************

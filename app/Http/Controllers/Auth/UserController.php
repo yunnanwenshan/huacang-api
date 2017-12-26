@@ -157,12 +157,14 @@ class UserController extends Controller
     public function updateUserInfo(Request $request)
     {
         $this->validate($request, [
-            'avatar' => 'url',
+            'avatar' => 'sometimes|url',
+            'sex' => 'sometimes|in:1,2'
         ]);
 
         try {
             $userId = is_null($this->user) ? 0 : $this->user->id;
-            $userInfo['avatar'] = $request->input('avatar');
+            $userInfo['avatar'] = $request->input('avatar', '');
+            $userInfo['sex'] = $request->input('sex', 0);
             $result = $this->userAuth->updateUserInfo($userId, $userInfo);
         } catch (UserException $e) {
             return response()->clientFail($e->getCode(), $e->getMessage());

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Components\Paginator;
+use App\Exceptions\Admin\Shop\ShopException;
 use App\Models\Product;
 use App\Models\Share;
 use App\Models\ShareDetail;
@@ -123,5 +124,101 @@ class ShopController extends Controller
             return response()->clientFail($e->getCode(), $e->getMessage());
         }
         return response()->clientSuccess(['page' => $paginator->export(), 'shop_list' => $result]);
+    }
+
+    /**
+     * 创建商城
+     *
+     * @param Request $request [description]
+     *
+     * @return Response [description]
+     */
+    public function create(Request $request)
+    {
+        $this->validate($request, [
+            'market_name' => 'required|string|min:1'
+        ]);
+
+        $marketName = $request->input('market_name');
+        try {
+            $share = Share::where('name', $marketName)->first();
+            if (!empty($share)) {
+                throw new ShopException(ShopException::SHOP_EXIST, ShopException::DEFAULT_CODE + 1);
+            }
+            $share = new Share();
+            $share->user_id = $this->user->id;
+            $share->name = $marketName;
+            $share->save();
+            Log::info(__FILE__ . '(' . __LINE__ . '), create market name successful, ', [
+                'user_id' => $this->user->id,
+                'name' => $marketName,
+            ]);
+        } catch (Exception $e) {
+            return response()->clientFail($e->getCode(), $e->getMessage());
+        }
+        return response()->clientSuccess(['share_id' => $share->id]);
+    }
+
+    /**
+     * 更新商城
+     *
+     * @param Request $request [description]
+     *
+     * @return Response [description]
+     */
+    public function update(Request $request)
+    {
+        $this->validate($request, [
+            'share_id' => 'required|numeric',
+            'market_name' => 'required|string|min:1'
+        ]);
+
+        $shareId = $request->input('share_id');
+        $marketName = $request->input('market_name');
+        try {
+            $share = Share::where('name', $marketName)->first();
+            if (!empty($share)) {
+                throw new ShopException(ShopException::SHOP_EXIST, ShopException::DEFAULT_CODE + 1);
+            }
+            $share = Share::where('id', $shareId)->where('user_id', $this->user->id)->first();
+            if (empty($share)) {
+                throw new ShopException(ShopException::SHOP_NOT_EXIST, ShopException::DEFAULT_CODE + 2);
+            }
+            $share->user_id = $this->user->id;
+            $share->name = $marketName;
+            $share->save();
+            Log::info(__FILE__ . '(' . __LINE__ . '), update market name successful, ', [
+                'user_id' => $this->user->id,
+                'share_id' => $shareId,
+                'name' => $marketName,
+            ]);
+        } catch (Exception $e) {
+            return response()->clientFail($e->getCode(), $e->getMessage());
+        }
+        return response()->clientSuccess();
+    }
+
+    /**
+     * 更新商城
+     *
+     * @param Request $request [description]
+     *
+     * @return Response [description]
+     */
+    public function productAdd(Request $request)
+    {
+
+    }
+
+    /**
+     * 更新商城
+     *
+     * @param Request $request [description]
+     *
+     * @return Response [description]
+     */
+    public function productRemove(Request $request)
+    {
+
     }
 }

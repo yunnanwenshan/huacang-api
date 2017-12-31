@@ -85,9 +85,12 @@ class OrderService implements OrderInterface
                 ]);
                 throw new OrderException(OrderException::ORDER_PRODUCT_STOCK_INSUFFICIENT, OrderException::DEFAULT_CODE + 8);
             }
-            $realTotalFee = $realTotalFee + $product->selling_price * $item['count'];
-            $item['price'] = $product->selling_price;
-            $item['fee'] = $product->selling_price * $item['count'];
+
+            //价格根据商场中的价格进行计算
+            $shareDetail = $shareDetailList->where('user_product_id', $item['user_product_id'])->first();
+            $realTotalFee = $realTotalFee + $shareDetail->selling_price * $item['count'];
+            $item['price'] = $shareDetail->selling_price;
+            $item['fee'] = $shareDetail->selling_price * $item['count'];
             $detail[] = $item;
         }
 
@@ -383,7 +386,7 @@ class OrderService implements OrderInterface
             $product = $products->where('id', $userProduct->product_id)->first();
             $item['name'] = '';
             if (!empty($product)) {
-                $item['name'] = $product->name;
+                $item = array_merge($item, $product->export());
             }
             $result[] = $item;
         }

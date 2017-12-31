@@ -22,7 +22,7 @@ class ProductService implements ProductInterface
      */
     public function productList($shareId, Paginator $paginator)
     {
-        $shareDetailColltion = ShareDetail::where('share_id', $shareId)->select('user_product_id')->get();
+        $shareDetailColltion = ShareDetail::where('share_id', $shareId)->get();
         $userProductIds = $shareDetailColltion->pluck('user_product_id');
         $userProductsQuery = UserProduct::whereIn('id', $userProductIds)
             ->where('status', UserProduct::STATUS_ONLINE);
@@ -40,13 +40,14 @@ class ProductService implements ProductInterface
             $class = $classCollection->where('id', $product->class_id)->first();
             $className = empty($class) ? '' : $class->name;
             $e = $product->export();
+            $e = array_merge($e, $item->export());
             $e['class_name'] = $className;
             $e['user_product_id'] = $item->id;
             $e['stock_unit'] = $item->stock_unit;
             $e['cost_price'] = $shareDetail->cost_price;
             $e['supply_price'] = $shareDetail->supply_price;
             $e['selling_price'] = $shareDetail->selling_price;
-            $rs[] = array_merge($e, $item->export());
+            $rs[] = $e;
         }
 
         Log::info(__FILE__ . '(' . __LINE__  .'), product list successful, ', [
@@ -75,19 +76,25 @@ class ProductService implements ProductInterface
         $userProducts = UserProduct::whereIn('product_id', $productIds)
             ->where('status', UserProduct::STATUS_ONLINE)
             ->get();
+        $shares = ShareDetail::where('user_product_id', $userProducts->pluck('id')->toArray())->get();
         $classIds = $products->pluck('class_id');
         $classCollection = ProductClass::whereIn('id', $classIds)->get();
         $productRs = [];
         foreach ($products as $item) {
             $class = $classCollection->where('id', $item->class_id)->first();
             $userProduct = $userProducts->where('product_id', $item->id)->first();
-            if (empty($userProduct)) {
+            $shareDetail = $shares->where('user_product_id', $userProduct->id)->first();
+            if (empty($userProduct) || empty($shareDetail)) {
                 continue;
             }
             $e = $item->export();
             $className = empty($class) ? '' : $class->name;
             $e['class_name'] = $className;
-            $productRs[] = array_merge($e, $userProduct->export());
+            $rs = array_merge($e, $userProduct->export());
+            $rs['cost_price'] = $shareDetail->cost_price;
+            $rs['supply_price'] = $shareDetail->supply_price;
+            $rs['selling_price'] = $shareDetail->selling_price;
+            $productRs[] = $rs;
         }
 
         Log::info(__FILE__ . '(' . __LINE__ . '), product list, ', [

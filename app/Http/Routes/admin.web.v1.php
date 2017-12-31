@@ -123,7 +123,7 @@ Route::group([
 
 /******************************************************************************
 
-商城相关/admin/v1/shop/)
+商城相关/admin/v1/market/)
 
  ******************************************************************************/
 Route::group([
@@ -135,6 +135,8 @@ Route::group([
     Route::any('list',                       ['uses' => 'ShopController@shopList',                    'middleware' => 'admin_wauth.kol']);
     // 商城列表
     Route::any('name/list',                  ['uses' => 'ShopController@marketNameList',              'middleware' => 'admin_wauth.kol']);
+//     商城列表
+//    Route::any('name/list',                  ['uses' => 'ShopController@marketNameList',              'middleware' => 'admin_wauth.kol']);
 });
 
 /******************************************************************************

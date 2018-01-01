@@ -43,17 +43,18 @@ class AddTemplateTest extends TestCase
         print_r($response->getHeaders());
 
         $request_body = [
-            "share_id" => 34,
+            "share_id" => 12,
 //            "supplier_id" => 32,
             "product_list" => [
                 [
-                    "cart_id" => 5,
-                    "product_id" => 8,
-                    "count" => 10,   //数量
+//                    "cart_id" => 5,
+                    "user_product_id" => 19,
+                    "count" => 3,   //数量
 //                    "price" => 120, //单价
 //                    "fee" => 12000, //当前产品价格
                 ],
-            ]
+            ],
+            "total_fee" => 1800,
         ];
         $result = json_decode((string)$response->getBody(), true);
         print_r($result);

@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Share;
 use App\Models\ShareDetail;
+use App\Models\User;
 use App\Models\UserProduct;
 use App\Services\Cart\Contract\CartInterface;
 use App\Services\Order\Contract\OrderInterface;
@@ -150,7 +151,7 @@ class OrderService implements OrderInterface
                 $clientInfo->user_id = $share->user_id;
                 $clientInfo->client_id = $user->id;
                 $clientInfo->mobile = $user->mobile;
-                $clientInfo->name = $user->user_name;
+                $clientInfo->name = empty($user->user_name) ? '' : $user->user_name;
                 $clientInfo->save();
             }
             DB::commit();

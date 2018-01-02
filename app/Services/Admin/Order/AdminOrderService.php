@@ -30,7 +30,7 @@ class AdminOrderService implements AdminOrderInterface
             'remark' => $remark,
         ]);
 
-        $shares = Share::where('user_id', $user->id)->get();
+        $shares = Share::where('user_id', $user->id)->where('status', 0)->get();
         if (empty($shares) || ($shares->count() <= 0)) {
             Log::info(__FILE__ . '(' . __LINE__ . '), not share for user, ', [
                 'user_id' => $user->id,
@@ -123,7 +123,7 @@ class AdminOrderService implements AdminOrderInterface
      */
     public function orderList(&$user, Paginator $paginator, $startTime, $endTime, $status)
     {
-        $shares = Share::where('user_id', $user->id)->get();
+        $shares = Share::where('user_id', $user->id)->where('status', 0)->get();
         if (empty($shares) || ($shares->count() <= 0)) {
             throw new AdminOrderException(AdminOrderException::ORDER_SHARE_NO, AdminOrderException::DEFAULT_CODE + 8);
         }

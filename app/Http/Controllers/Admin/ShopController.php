@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Components\Paginator;
 use App\Exceptions\Admin\Shop\ShopException;
+use App\Exceptions\Product\ProductException;
 use App\Models\Product;
 use App\Models\Share;
 use App\Models\ShareDetail;
@@ -13,6 +14,7 @@ use Illuminate\Http\Request;
 use Exception;
 use DB;
 use Log;
+use Validator;
 
 class ShopController extends Controller
 {
@@ -40,7 +42,9 @@ class ShopController extends Controller
         $user = $this->user;
 
         try {
-            $shares = Share::where('user_id', $user->id)->get();
+            $shares = Share::where('user_id', $user->id)
+                ->where('status', 0)
+                ->get();
             $rs = $shares->map(function ($item) {
                 $e['share_id'] = $item->id;
                 $e['name'] = $item->name;
@@ -74,7 +78,7 @@ class ShopController extends Controller
 
         try {
             $paginator = new Paginator($request);
-            $sql = 'select * from share where user_id = ' . $this->user->id;
+            $sql = 'select * from share where status = 0 and user_id = ' . $this->user->id;
             if (!empty($shopName)) {
                 $sql = $sql . ' and name = \'' . $shopName . '\'';
             }
@@ -141,7 +145,9 @@ class ShopController extends Controller
 
         $marketName = $request->input('market_name');
         try {
-            $share = Share::where('name', $marketName)->first();
+            $share = Share::where('name', $marketName)
+                ->where('status', 0)
+                ->first();
             if (!empty($share)) {
                 throw new ShopException(ShopException::SHOP_EXIST, ShopException::DEFAULT_CODE + 1);
             }
@@ -176,11 +182,16 @@ class ShopController extends Controller
         $shareId = $request->input('share_id');
         $marketName = $request->input('market_name');
         try {
-            $share = Share::where('name', $marketName)->first();
+            $share = Share::where('name', $marketName)
+                ->where('status', 0)
+                ->first();
             if (!empty($share)) {
                 throw new ShopException(ShopException::SHOP_EXIST, ShopException::DEFAULT_CODE + 1);
             }
-            $share = Share::where('id', $shareId)->where('user_id', $this->user->id)->first();
+            $share = Share::where('id', $shareId)
+                ->where('status', 0)
+                ->where('user_id', $this->user->id)
+                ->first();
             if (empty($share)) {
                 throw new ShopException(ShopException::SHOP_NOT_EXIST, ShopException::DEFAULT_CODE + 2);
             }
@@ -199,15 +210,34 @@ class ShopController extends Controller
     }
 
     /**
-     * 更新商城
+     * 删除商城
      *
      * @param Request $request [description]
      *
      * @return Response [description]
      */
-    public function productAdd(Request $request)
+    public function delete(Request $request)
     {
+        $this->validate($request, [
+            'share_id' => 'required|numeric',
+        ]);
 
+        $shareId = $request->input('share_id');
+
+        try {
+            $share = Share::where('id', $shareId)
+                ->where('status', 0)
+                ->where('user_id', $this->user->id)->first();
+            if (empty($share)) {
+                throw new ShopException(ShopException::SHOP_NOT_EXIST, ShopException::DEFAULT_CODE + 3);
+            }
+            $share->status = 1;
+            $share->save();
+        } catch (Exception $e) {
+            return response()->clientFail($e->getCode(), $e->getMessage());
+        }
+
+        return response()->clientSuccess();
     }
 
     /**
@@ -217,8 +247,103 @@ class ShopController extends Controller
      *
      * @return Response [description]
      */
+    public function productAdd(Request $request)
+    {
+        $this->validate($request, [
+            'share_id' => 'requried|numeric',
+            'products' => 'required|array',
+        ]);
+
+        $shareId = $request->input('share_id');
+        $products = $request->input('products');
+
+        try {
+            foreach ($products as $item) {
+                $v = Validator::make($item, [
+                    'user_product_id' => 'required|numeric',
+                    'cost_price' => 'required|numeric',
+                    'supply_price' => 'required|numeric',
+                    'selling_price' => 'required|numeric',
+                ]);
+
+                if ($v->fails()) {
+                    Log::info(__FILE__.'('.__LINE__.'), product list validate fail', [
+                        'location' => $v->messages()->toJson(JSON_UNESCAPED_SLASHES),
+                    ]);
+                    throw new ProductException(ProductException::PRODUCT_PARAM_VALID, ProductException::DEFAULT_CODE + 14);
+                }
+            }
+            $share = Share::where('id', $shareId)->where('status', 0)->first();
+            if (empty($share)) {
+                throw new ShopException(ShopException::SHOP_NOT_EXIST, ShopException::DEFAULT_CODE + 4);
+            }
+
+            $userProducts = UserProduct::where('share_id', $shareId)->whereIn('user_product_id', array_pluck($products, 'user_product_id'))->get();
+            if ($userProducts->count() != count($products)) {
+                throw new ProductException(ProductException::PRODUCT_NOT_EXIST, ProductException::DEFAULT_CODE + 15);
+            }
+
+            DB::begintransaction();
+            $affectRow = ShareDetail::where('share_id')
+                ->whereIn('user_product_id', array_pluck($products, 'user_product_id'))
+                ->limit(count($products))
+                ->update($products);
+            if ($affectRow != count($products)) {
+                throw new ProductException(ProductException::PRODUCT_MARKET_CREATE_FAIL, ProductException::DEFAULT_CODE + 16);
+            }
+            DB::commit();
+        } catch (Exception $e) {
+            return response()->clientFail($e->getCode(), $e->getMessage());
+        }
+        return response()->clientSuccess();
+    }
+
+    /**
+     * 删除产品从商城
+     *
+     * @param Request $request [description]
+     *
+     * @return Response [description]
+     */
     public function productRemove(Request $request)
     {
+        $this->validate($request, [
+            'share_id' => 'requried|numeric',
+            'products' => 'required|array',
+        ]);
 
+        $shareId = $request->input('share_id');
+        $products = $request->input('products');
+        try {
+            foreach ($products as $item) {
+                $v = Validator::make($item, [
+                    'user_product_id' => 'required|numeric',
+                    'cost_price' => 'required|numeric',
+                    'supply_price' => 'required|numeric',
+                    'selling_price' => 'required|numeric',
+                ]);
+
+                if ($v->fails()) {
+                    Log::info(__FILE__.'('.__LINE__.'), product list validate fail', [
+                        'location' => $v->messages()->toJson(JSON_UNESCAPED_SLASHES),
+                    ]);
+                    throw new ProductException(ProductException::PRODUCT_PARAM_VALID, ProductException::DEFAULT_CODE + 14);
+                }
+            }
+            $share = Share::where('id', $shareId)->where('status', 0)->first();
+            if (empty($share)) {
+                throw new ShopException(ShopException::SHOP_NOT_EXIST, ShopException::DEFAULT_CODE + 4);
+            }
+
+            $userProducts = UserProduct::where('share_id', $shareId)->whereIn('user_product_id', array_pluck($products, 'user_product_id'))->get();
+            if ($userProducts->count() != count($products)) {
+                throw new ProductException(ProductException::PRODUCT_NOT_EXIST, ProductException::DEFAULT_CODE + 15);
+            }
+
+
+        } catch (Exception $e) {
+            return response()->clientFail($e->getCode(), $e->getMessage());
+        }
+        return response()->clientSuccess();
     }
 }

@@ -55,10 +55,10 @@ class ProductService implements ProductInterface
             'rs' => $rs,
         ]);
 
-        $share = Share::where('id', $shareId)->first();
+        $share = Share::where('id', $shareId)->where('status', 0)->first();
 
         return [
-            'market_name' => $share->name,
+            'market_name' => empty($share) ? '' : $share->name,
             'product_list' => $rs,
         ];
     }

@@ -529,7 +529,10 @@ class AdminProductService implements AdminProductInterface
             if (empty($shareId)) {
                 $this->createShop($user, $params);
             } else {
-                $share = Share::where('id', $params['share_id'])->where('user_id', $user->id)->first();
+                $share = Share::where('id', $params['share_id'])
+                    ->where('user_id', $user->id)
+                    ->where('status', 0)
+                    ->first();
                 if (empty($share)) {
                     //创建商城
                     $this->createShop($user, $params);
@@ -555,11 +558,11 @@ class AdminProductService implements AdminProductInterface
     private function createShop(&$user, $params)
     {
         $this->getUserProducts($user, $params);
-        $share = Share::where('user_id', $user->id)->first();
+        $share = Share::where('user_id', $user->id)->where('status', 0)->first();
         if (!empty($share)) {
             $this->updateShop($user, $params);
         } else {
-            $share = Share::where('name', $params['market_name'])->first();
+            $share = Share::where('name', $params['market_name'])->where('status', 0)->first();
             if (!empty($share)) {
                 throw new ProductException(ProductException::PRODUCT_MARKET_NAME_EXISTED, ProductException::DEFAULT_CODE + 8);
             }

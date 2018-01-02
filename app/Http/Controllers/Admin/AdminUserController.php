@@ -48,7 +48,7 @@ class AdminUserController extends Controller
 
         try {
             //查找商家信息
-            $shares = Share::where('user_id', $user->id)->get();
+            $shares = Share::where('user_id', $user->id)->where('status', 0)->get();
             if (empty($shares) || ($shares->count() <= 0)) {
                 throw new AdminUserException(AdminUserException::USER_NO_MARKET, AdminUserException::DEFAULT_CODE + 1);
             }

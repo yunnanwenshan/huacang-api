@@ -40,7 +40,7 @@ class OrderService implements OrderInterface
 
         //TODO: 1.1 检查shareid是否有效
         //TODO: 检查订单是否来做购物车
-        $share = Share::where('id', $shareId)->first();
+        $share = Share::where('id', $shareId)->where('status', 0)->first();
         if (empty($share)) {
             throw new OrderException(OrderException::ORDER_MARKET_NOT_EXIST, OrderException::DEFAULT_CODE + 13);
         }
@@ -190,7 +190,7 @@ class OrderService implements OrderInterface
 
         //TODO: 1.1 检查shareid是否有效
         //TODO: 检查订单是否来做购物车
-        $share = Share::where('id', $shareId)->first();
+        $share = Share::where('id', $shareId)->where('status', 0)->first();
         if (empty($share)) {
             throw new OrderException(OrderException::ORDER_MARKET_NOT_EXIST, OrderException::DEFAULT_CODE + 13);
         }
@@ -358,7 +358,7 @@ class OrderService implements OrderInterface
             throw new OrderException(OrderException::ORDER_NOT_EXIST, OrderException::DEFAULT_CODE + 4);
         }
 
-        $share = Share::where('id', $order->share_id)->first();
+        $share = Share::where('id', $order->share_id)->where('status', 0)->first();
         if (empty($share)) {
             Log::error(__FILE__ . '(' . __LINE__ . '), share is null, ', [
                 'user_id' => $user->id,
@@ -407,7 +407,7 @@ class OrderService implements OrderInterface
         $orderCollection = $paginator->query($orders);
         $productDetail = $orderCollection->pluck('order_detail')->toArray();
         $shareIds = $orderCollection->pluck('share_id')->toArray();
-        $sharesCollection = Share::whereIn('id', $shareIds)->get();
+        $sharesCollection = Share::whereIn('id', $shareIds)->where('status', 0)->get();
         $userProductIds = [];
         foreach ($productDetail as $pd) {
             $jsonPd = json_decode($pd, true);

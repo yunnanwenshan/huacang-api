@@ -13,6 +13,7 @@ class ShopException extends \Exception
      */
     const SHOP_EXIST        = '商城名称已存在'; // DEFAULT_CODE + 1
     const SHOP_NOT_EXIST    = '商城不存在'; // DEFAULT_CODE + 2, 3, 4
+    const SHOP_PRODUCT_EXIST = '商品已存在商店中'; // DEFAULT_CODE + 5
 
     public function __construct($message = '', $code = 0, $previous = null)
     {

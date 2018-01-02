@@ -250,7 +250,7 @@ class ShopController extends Controller
     public function productAdd(Request $request)
     {
         $this->validate($request, [
-            'share_id' => 'requried|numeric',
+            'share_id' => 'required|numeric',
             'products' => 'required|array',
         ]);
 
@@ -273,26 +273,48 @@ class ShopController extends Controller
                     throw new ProductException(ProductException::PRODUCT_PARAM_VALID, ProductException::DEFAULT_CODE + 14);
                 }
             }
-            $share = Share::where('id', $shareId)->where('status', 0)->first();
+            $share = Share::where('id', $shareId)->where('user_id', $this->user->id)->where('status', 0)->first();
             if (empty($share)) {
                 throw new ShopException(ShopException::SHOP_NOT_EXIST, ShopException::DEFAULT_CODE + 4);
             }
 
-            $userProducts = UserProduct::where('share_id', $shareId)->whereIn('user_product_id', array_pluck($products, 'user_product_id'))->get();
+            $userProducts = UserProduct::where('user_id', $this->user->id)->whereIn('id', array_pluck($products, 'user_product_id'))->get();
             if ($userProducts->count() != count($products)) {
                 throw new ProductException(ProductException::PRODUCT_NOT_EXIST, ProductException::DEFAULT_CODE + 15);
             }
 
+            //商品较验
+            foreach ($userProducts as $item) {
+                if ($item->status != UserProduct::STATUS_ONLINE) {
+                    throw new ProductException(ProductException::PRODUCT_NOT_EXIST, ProductException::DEFAULT_CODE + 16);
+                }
+            }
+
+            //检查商品是否已存在商店中
+            $shareDetailCount = ShareDetail::where('share_id', $shareId)->whereIn('user_product_id', array_pluck($products, 'user_product_id'))->count();
+            if ($shareDetailCount != 0) {
+                throw new ShopException(ShopException::SHOP_PRODUCT_EXIST, ShopException::DEFAULT_CODE + 5);
+            }
+
             DB::begintransaction();
-            $affectRow = ShareDetail::where('share_id')
-                ->whereIn('user_product_id', array_pluck($products, 'user_product_id'))
-                ->limit(count($products))
-                ->update($products);
-            if ($affectRow != count($products)) {
-                throw new ProductException(ProductException::PRODUCT_MARKET_CREATE_FAIL, ProductException::DEFAULT_CODE + 16);
+            foreach ($products as $item) {
+                $shareDetail = new ShareDetail();
+                $shareDetail->share_id = $shareId;
+                $shareDetail->user_product_id = $item['user_product_id'];
+                $shareDetail->cost_price = $item['cost_price'];
+                $shareDetail->supply_price = $item['supply_price'];
+                $shareDetail->selling_price = $item['selling_price'];
+                $shareDetail->save();
             }
             DB::commit();
+
+            Log::info(__FILE__ . '(' . __LINE__ . '), add product to shop successful, ', [
+                'user_id' => $this->user->id,
+                'share_id' => $shareId,
+                'products' => $products,
+            ]);
         } catch (Exception $e) {
+            DB::rollback();
             return response()->clientFail($e->getCode(), $e->getMessage());
         }
         return response()->clientSuccess();
@@ -308,7 +330,7 @@ class ShopController extends Controller
     public function productRemove(Request $request)
     {
         $this->validate($request, [
-            'share_id' => 'requried|numeric',
+            'share_id' => 'required|numeric',
             'products' => 'required|array',
         ]);
 
@@ -330,18 +352,34 @@ class ShopController extends Controller
                     throw new ProductException(ProductException::PRODUCT_PARAM_VALID, ProductException::DEFAULT_CODE + 14);
                 }
             }
-            $share = Share::where('id', $shareId)->where('status', 0)->first();
+            $share = Share::where('id', $shareId)->where('user_id', $this->user->id)->where('status', 0)->first();
             if (empty($share)) {
                 throw new ShopException(ShopException::SHOP_NOT_EXIST, ShopException::DEFAULT_CODE + 4);
             }
-
-            $userProducts = UserProduct::where('share_id', $shareId)->whereIn('user_product_id', array_pluck($products, 'user_product_id'))->get();
+            $userProducts = UserProduct::where('user_id', $this->user->id)->whereIn('id', array_pluck($products, 'user_product_id'))->get();
             if ($userProducts->count() != count($products)) {
                 throw new ProductException(ProductException::PRODUCT_NOT_EXIST, ProductException::DEFAULT_CODE + 15);
             }
+            DB::begintransaction();
+            foreach ($products as $item) {
+                $affectRow = ShareDetail::where('share_id', $shareId)
+                    ->where('user_product_id', $item['user_product_id'])
+                    ->limit(1)
+                    ->update($item);
+                if ($affectRow == 0) {
+                    throw new ProductException(ProductException::PRODUCT_MARKET_CREATE_FAIL, ProductException::DEFAULT_CODE + 16);
+                }
+            }
 
 
+            DB::commit();
+            Log::info(__FILE__ . '(' . __LINE__ . '), update share product, ', [
+                'share_id' => $shareId,
+                'products' => $products,
+                'user_id' => $this->user->id,
+            ]);
         } catch (Exception $e) {
+            DB::rollback();
             return response()->clientFail($e->getCode(), $e->getMessage());
         }
         return response()->clientSuccess();

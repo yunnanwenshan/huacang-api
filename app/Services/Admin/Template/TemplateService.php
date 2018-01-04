@@ -182,7 +182,7 @@ class TemplateService implements TemplateInterface
      */
     public function templateList(&$user, Paginator $paginator, $startTime, $endTime, $name)
     {
-        $sql = 'select `template`.`user_id`, `template`.`template_name`, `class`.`name` as `class_name`, `template`.`update_time`, `template_form_item`.`form_content` 
+        $sql = 'select `template`.`id`, `template`.`user_id`, `template`.`template_name`, `class`.`name` as `class_name`, `template`.`update_time`, `template_form_item`.`form_content` 
 from `template` inner join `class` on `template`.`class_id` = `class`.`id` inner join `template_form_item` on `template`.`id` = `template_form_item`.`template_id` where `template`.`user_id` = ? and `template`.`status` = ?';
         if (!empty($startTime)) {
             $sql = $sql . ' and `template`.`update_time` >= \'' . $startTime .  '\'';
@@ -206,6 +206,7 @@ from `template` inner join `class` on `template`.`class_id` = `class`.`id` inner
         $templates = $paginator->queryArray($templates);
         $templates = new Collection($templates);
         $rs = $templates->map(function ($item) {
+            $e['template_id'] = $item->id;
             $e['name'] = $item->template_name;
             $e['class_name'] = $item->class_name;
             $e['update_time'] = (new Carbon($item->update_time))->format('Y-m-d H:i:s');

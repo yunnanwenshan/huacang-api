@@ -6,6 +6,7 @@ namespace App\Services\Admin\Order;
 use App\Components\Paginator;
 use App\Exceptions\Admin\AdminOrderException\AdminOrderException;
 use App\Exceptions\Order\OrderException;
+use App\Models\ClientInfo;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Share;
@@ -163,13 +164,23 @@ class AdminOrderService implements AdminOrderInterface
         $userIds = $userIdsCollection->toArray();
         $userList = User::whereIn('id', $userIds)->get();
 
+        //获取client_info信息
+        $clientInfoList = ClientInfo::where('user_id', $user->id)->whereIn('client_id', $userIds)->get();
+
         //返回客户端需要的用户数据
         $rs = [];
-        $orderCollection->map(function ($item) use(&$rs, $userList, $products, $userProducts) {
+        $orderCollection->map(function ($item) use(&$rs, $userList, $products, $userProducts, $clientInfoList, $shares) {
             $user = $userList->where('id', $item->user_id)->first();
+            $clientInfo = $clientInfoList->where('client_id', $item->user_id)->first();
+            $share = $shares->where('id', $item->share_id)->first();
             $e['order_sn'] = $item->sn;
+            $e['share'] = [
+                'share_id' => $item->share_id,
+                'market_name' => empty($shares) ? '' : $share->name,
+            ];
             $e['user_id'] = $user->id;
             $e['user_name'] = $user->user_name;
+            $e['client_name'] = empty($clientInfo) ? '' : $clientInfo->name;
             $e['user_phone'] = $user->mobile;
             $e['share_sn'] = $item->share_id;
             $e['total_fee'] = $item->total_fee;

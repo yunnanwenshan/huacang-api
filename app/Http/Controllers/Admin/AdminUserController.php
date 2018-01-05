@@ -76,9 +76,12 @@ class AdminUserController extends Controller
                 ->select('user_id', 'order_detail', 'share_id')
                 ->get();
 
-            $rs = $orderCollections->map(function ($item) use ($users, $userOrders, $shares) {
+            $clientInfos = ClientInfo::where('user_id', $user->id)->whereIn('client_id', $userIds)->get();
+
+            $rs = $orderCollections->map(function ($item) use ($users, $userOrders, $shares, $clientInfos) {
                 $share = $shares->where('id', $item->share_id)->first();
                 $user = $users->where('id', $item->user_id)->first();
+                $clientInfo = $clientInfos->where('user_id', $user->id)->where('client_id', $item->user_id)->first();
                 $e['share'] = [
                     'share_id' => $share->id,
                     'market_name' => $share->name,
@@ -86,6 +89,7 @@ class AdminUserController extends Controller
                 $e['user'] = [
                     'client_id' => $user->id,
                     'user_name' => empty($user->user_name) ? '' : $user->user_name,
+                    'client_name' => empty($clientInfo) ? '' : $clientInfo->name,
                     'mobile' => $user->mobile,
                 ];
                 $e['client_id'] = $item->user_id;

@@ -91,7 +91,7 @@ class AdminUserController extends Controller
                 ];
                 $e['user'] = [
                     'client_id' => $user->id,
-//                    'user_name' => empty($user->user_name) ? '' : $user->user_name,
+                    'user_name' => empty($user->user_name) ? '' : $user->user_name,
                     'real_name' => empty($userInfo->real_name) ? '' : $userInfo->real_name,
                     'client_name' => empty($clientInfo) ? '' : $clientInfo->name,
                     'mobile' => $user->mobile,

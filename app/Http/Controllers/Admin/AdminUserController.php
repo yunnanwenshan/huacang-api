@@ -9,6 +9,7 @@ use App\Models\ClientInfo;
 use App\Models\Order;
 use App\Models\Share;
 use App\Models\User;
+use App\Models\UserInfo;
 use App\Models\UserProduct;
 use Illuminate\Http\Request;
 use Exception;
@@ -62,6 +63,7 @@ class AdminUserController extends Controller
             $orderCollections = $paginator->queryArray($orders);
             $userIds = $orderCollections->pluck('user_id')->toArray();
             $users = User::whereIn('id', $userIds)->get();
+            $userInfos = UserInfo::whereIn('user_id', $userIds)->get();
             $userOrders = Order::whereIn('share_id', $shareIds)
                 ->whereIn('status', [
                     Order::STATUS_FINISHED,
@@ -78,9 +80,10 @@ class AdminUserController extends Controller
 
             $clientInfos = ClientInfo::where('user_id', $user->id)->whereIn('client_id', $userIds)->get();
 
-            $rs = $orderCollections->map(function ($item) use ($users, $userOrders, $shares, $clientInfos) {
+            $rs = $orderCollections->map(function ($item) use ($users, $userInfos, $userOrders, $shares, $clientInfos) {
                 $share = $shares->where('id', $item->share_id)->first();
                 $user = $users->where('id', $item->user_id)->first();
+                $userInfo = $userInfos->where('user_id', $item->user_id)->first();
                 $clientInfo = $clientInfos->where('user_id', $user->id)->where('client_id', $item->user_id)->first();
                 $e['share'] = [
                     'share_id' => $share->id,
@@ -88,7 +91,8 @@ class AdminUserController extends Controller
                 ];
                 $e['user'] = [
                     'client_id' => $user->id,
-                    'user_name' => empty($user->user_name) ? '' : $user->user_name,
+//                    'user_name' => empty($user->user_name) ? '' : $user->user_name,
+                    'real_name' => empty($userInfo->real_name) ? '' : $userInfo->real_name,
                     'client_name' => empty($clientInfo) ? '' : $clientInfo->name,
                     'mobile' => $user->mobile,
                 ];

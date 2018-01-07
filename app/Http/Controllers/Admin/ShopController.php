@@ -110,6 +110,7 @@ class ShopController extends Controller
                         ]);
                         return [];
                     }
+                    $e['status'] = $userProduct->status;
                     $product = $productCollection->where('id', $userProduct->product_id)->first();
                     if (empty($product)) {
                         Log::info(__FILE__ . '(' . __LINE__ . '), product is null, ', [
@@ -118,6 +119,7 @@ class ShopController extends Controller
                         return [];
                     }
                     $e['product_name'] = $product->name;
+                    $e['main_img'] = $product->main_img;
                     return $e;
                 })->toArray());
                 return $e;

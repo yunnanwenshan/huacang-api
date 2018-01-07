@@ -17,6 +17,7 @@ class ShareDetail extends Model
             'user_product_id' => $this->user_product_id,
             'cost_price' => $this->cost_price,
             'supply_price' => $this->supply_price,
+            'selling_price' => $this->selling_price,
             'update_time' => (new Carbon($this->update_time))->format('Y-m-d H:i:s'),
         ];
     }

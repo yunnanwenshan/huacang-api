@@ -190,7 +190,7 @@ class ShopController extends Controller
             $share = Share::where('name', $marketName)
                 ->where('status', 0)
                 ->first();
-            if (empty($share)) {
+            if (!empty($share)) {
                 throw new ShopException(ShopException::SHOP_EXIST, ShopException::DEFAULT_CODE + 1);
             }
             $share = Share::where('id', $shareId)

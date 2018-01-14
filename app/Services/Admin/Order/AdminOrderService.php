@@ -11,6 +11,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Share;
 use App\Models\User;
+use App\Models\UserInfo;
 use App\Models\UserProduct;
 use App\Services\Admin\Order\Contract\AdminOrderInterface;
 use Carbon\Carbon;
@@ -163,14 +164,16 @@ class AdminOrderService implements AdminOrderInterface
         $userIdsCollection = $orderCollection->pluck('user_id');
         $userIds = $userIdsCollection->toArray();
         $userList = User::whereIn('id', $userIds)->get();
+        $userInfoList = UserInfo::whereIn('user_id', $userIds)->get();
 
         //获取client_info信息
         $clientInfoList = ClientInfo::where('user_id', $user->id)->whereIn('client_id', $userIds)->get();
 
         //返回客户端需要的用户数据
         $rs = [];
-        $orderCollection->map(function ($item) use(&$rs, $userList, $products, $userProducts, $clientInfoList, $shares) {
+        $orderCollection->map(function ($item) use(&$rs, $userInfoList, $userList, $products, $userProducts, $clientInfoList, $shares) {
             $user = $userList->where('id', $item->user_id)->first();
+            $userInfo = $userInfoList->where('user_id', $item->user_id)->first();
             $clientInfo = $clientInfoList->where('client_id', $item->user_id)->first();
             $share = $shares->where('id', $item->share_id)->first();
             $e['order_sn'] = $item->sn;
@@ -180,6 +183,7 @@ class AdminOrderService implements AdminOrderInterface
             ];
             $e['user_id'] = $user->id;
             $e['user_name'] = $user->user_name;
+            $e['real_name'] = $userInfo->real_name;
             $e['client_name'] = empty($clientInfo) ? '' : $clientInfo->name;
             $e['user_phone'] = $user->mobile;
             $e['share_sn'] = $item->share_id;

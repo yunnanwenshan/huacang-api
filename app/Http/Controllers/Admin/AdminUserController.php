@@ -45,6 +45,7 @@ class AdminUserController extends Controller
         ]);
 
         $user = $this->user;
+        $userId = $this->user->id;
         $paginator = new Paginator($request);
 
         try {
@@ -80,20 +81,21 @@ class AdminUserController extends Controller
 
             $clientInfos = ClientInfo::where('user_id', $user->id)->whereIn('client_id', $userIds)->get();
 
-            $rs = $orderCollections->map(function ($item) use ($users, $userInfos, $userOrders, $shares, $clientInfos) {
+            $rs = $orderCollections->map(function ($item) use ($users, $userId, $userInfos, $userOrders, $shares, $clientInfos) {
                 $share = $shares->where('id', $item->share_id)->first();
                 $user = $users->where('id', $item->user_id)->first();
                 $userInfo = $userInfos->where('user_id', $item->user_id)->first();
-                $clientInfo = $clientInfos->where('user_id', $user->id)->where('client_id', $item->user_id)->first();
+                $clientInfo = $clientInfos->where('user_id', $userId)->where('client_id', $item->user_id)->first();
                 $e['share'] = [
                     'share_id' => $share->id,
                     'market_name' => $share->name,
                 ];
                 $e['user'] = [
                     'client_id' => $user->id,
-                    'user_name' => empty($user->user_name) ? '' : $user->user_name,
-                    'real_name' => empty($userInfo->real_name) ? '' : $userInfo->real_name,
+                    'user_name' => empty($user) ? '' : $user->user_name,
+                    'real_name' => empty($userInfo) ? '' : $userInfo->real_name,
                     'client_name' => empty($clientInfo) ? '' : $clientInfo->name,
+                    'remark' => empty($clientInfo) ? '' : $clientInfo->remark,
                     'mobile' => $user->mobile,
                 ];
                 $e['client_id'] = $item->user_id;

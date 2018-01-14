@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Components\Paginator;
 use App\Exceptions\Admin\Shop\ShopException;
 use App\Exceptions\Product\ProductException;
+use App\Models\PriceOpLog;
 use App\Models\Product;
 use App\Models\Share;
 use App\Models\ShareDetail;
 use App\Models\UserProduct;
+use App\Services\Admin\PriceLog\PriceLogService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Exception;
@@ -187,7 +189,7 @@ class ShopController extends Controller
             $share = Share::where('name', $marketName)
                 ->where('status', 0)
                 ->first();
-            if (!empty($share)) {
+            if (empty($share)) {
                 throw new ShopException(ShopException::SHOP_EXIST, ShopException::DEFAULT_CODE + 1);
             }
             $share = Share::where('id', $shareId)
@@ -205,6 +207,91 @@ class ShopController extends Controller
                 'share_id' => $shareId,
                 'name' => $marketName,
             ]);
+        } catch (Exception $e) {
+            return response()->clientFail($e->getCode(), $e->getMessage());
+        }
+        return response()->clientSuccess();
+    }
+
+    /**
+     * 更新商城内产品价格
+     *
+     * @param Request $request [description]
+     *
+     * @return Response [description]
+     */
+    public function priceUpdate(Request $request)
+    {
+        $this->validate($request, [
+            'share_id' => 'required|numeric',
+            'user_product_id' => 'required|numeric',
+            'cost_price' => 'required|numeric',
+            'supply_price' => 'required|numeric',
+            'selling_price' => 'required|numeric',
+        ]);
+
+        $shareId = $request->input('share_id');
+        $userProductId = $request->input('user_product_id');
+        $costPrice = $request->input('cost_price');
+        $supplyPrice = $request->input('supply_price');
+        $sellingPrice = $request->input('selling_price');
+
+        try {
+            $share = Share::where('id', $shareId)
+                ->where('user_id', $this->user->id)
+                ->where('status', 0)
+                ->first();
+            if (empty($share)) {
+                throw new ShopException(ShopException::SHOP_EXIST, ShopException::DEFAULT_CODE + 1);
+            }
+            $shareDetail = ShareDetail::where('share_id', $shareId)
+                ->where('user_product_id', $userProductId)
+                ->first();
+            if (empty($shareDetail)) {
+                throw new ShopException(ShopException::SHOP_PRODUCT_NO_EXIST, ShopException::DEFAULT_CODE + 6);
+            }
+            try {
+                DB::begintransaction();
+
+
+                //成本价格
+                $priceService = new PriceLogService();
+                $priceService->recordPriceLog(0, $userProductId, $shareId, 0, '', $this->user->id, PriceOpLog::PRICE_TYPE_1,
+                    $shareDetail->cost_price, $costPrice, '', '', PriceOpLog::TYPE_4, $this->user->id);
+                //供应价
+                $priceService->recordPriceLog(0, $userProductId, $shareId, 0, '', $this->user->id, PriceOpLog::PRICE_TYPE_2,
+                    $shareDetail->supply_price, $supplyPrice, '', '', PriceOpLog::TYPE_4, $this->user->id);
+                //销售价
+                $priceService->recordPriceLog(0, $userProductId, $shareId, 0, '', $this->user->id, PriceOpLog::PRICE_TYPE_3,
+                    $shareDetail->selling_price, $sellingPrice, '', '', PriceOpLog::TYPE_4, $this->user->id);
+                $shareDetail->cost_price = $costPrice;
+                $shareDetail->supply_price = $supplyPrice;
+                $shareDetail->selling_price = $sellingPrice;
+                $shareDetail->save();
+                DB::commit();
+
+                Log::info(__FILE__ . '(' . __LINE__ . '), shop update price successful, ', [
+                    'user_id' => $this->user->id,
+                    'share_id' => $shareId,
+                    'user_product_id' => $userProductId,
+                    'cost_price' => $costPrice,
+                    'supply_price' => $supplyPrice,
+                    'selling_price' => $sellingPrice,
+                ]);
+            } catch (Exception $e) {
+                DB::rollback();
+                Log::error(__FILE__ . '(' . __LINE__ . '), shop update price fail, ', [
+                    'user_id' => $this->user->id,
+                    'share_id' => $shareId,
+                    'user_product_id' => $userProductId,
+                    'cost_price' => $costPrice,
+                    'supply_price' => $supplyPrice,
+                    'selling_price' => $sellingPrice,
+                    'code' => $e->getCode(),
+                    'message' => $e->getMessage(),
+                ]);
+            }
+
         } catch (Exception $e) {
             return response()->clientFail($e->getCode(), $e->getMessage());
         }

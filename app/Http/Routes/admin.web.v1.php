@@ -139,6 +139,8 @@ Route::group([
     Route::any('add',                        ['uses' => 'ShopController@create',                      'middleware' => 'admin_wauth.kol']);
     // 商城更新
     Route::any('update',                     ['uses' => 'ShopController@update',                      'middleware' => 'admin_wauth.kol']);
+    // 商城商品价格更新
+    Route::any('price/update',               ['uses' => 'ShopController@priceUpdate',                 'middleware' => 'admin_wauth.kol']);
     // 商城更新
     Route::any('delete',                     ['uses' => 'ShopController@delete',                      'middleware' => 'admin_wauth.kol']);
     // 增加商品到商城

@@ -18,5 +18,8 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
 
         //后台分类服务
         $this->app->bind('App\Services\Admin\ConfigClass\Contract\AdminClassInterface', 'App\Services\Admin\ConfigClass\ClassService');
+
+        //后台价格记录服务
+        $this->app->bind('App\Services\Admin\PriceLog\Contract\PriceLogInterface', 'App\Services\Admin\PriceLog\PriceLogService');
     }
 }

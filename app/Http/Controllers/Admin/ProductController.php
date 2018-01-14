@@ -190,6 +190,8 @@ class ProductController extends Controller
             'status' => 'in:1,2,3,4',
             'start_time' => 'string',
             'end_time' => 'string',
+            'order_sn' => 'string',
+            'share_id' => 'numeric',
             'page_index' => 'required|numeric',
             'page_size' => 'required|numeric',
         ]);
@@ -201,6 +203,8 @@ class ProductController extends Controller
         $params['start_time'] = $request->input('start_time', null);
         $params['end_time'] = $request->input('end_time', null);
         $params['status'] = $request->input('status', null);
+        $params['order_sn'] = $request->input('order_sn', null);
+        $params['share_id'] = $request->input('share_id', null);
 
         try {
             $paginator = new Paginator($request);

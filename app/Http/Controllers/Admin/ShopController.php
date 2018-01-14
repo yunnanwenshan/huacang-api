@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\Share;
 use App\Models\ShareDetail;
 use App\Models\UserProduct;
+use App\Services\Admin\PriceLog\Contract\PriceLogInterface;
 use App\Services\Admin\PriceLog\PriceLogService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -220,7 +221,7 @@ class ShopController extends Controller
      *
      * @return Response [description]
      */
-    public function priceUpdate(Request $request)
+    public function priceUpdate(Request $request, PriceLogInterface $priceService)
     {
         $this->validate($request, [
             'share_id' => 'required|numeric',
@@ -255,7 +256,6 @@ class ShopController extends Controller
 
 
                 //成本价格
-                $priceService = new PriceLogService();
                 $priceService->recordPriceLog(0, $userProductId, $shareId, 0, '', $this->user->id, PriceOpLog::PRICE_TYPE_1,
                     $shareDetail->cost_price, $costPrice, '', '', PriceOpLog::TYPE_4, $this->user->id);
                 //供应价

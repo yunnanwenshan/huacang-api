@@ -6,8 +6,7 @@ namespace App\Services\Admin\PriceLog;
 use App\Models\PriceOpLog;
 use App\Services\Admin\PriceLog\Contract\PriceLogInterface;
 
-//class PriceLogService implements PriceLogInterface
-class PriceLogService
+class PriceLogService implements PriceLogInterface
 {
     /**
      * 储存价格变化信息

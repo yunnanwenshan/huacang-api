@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Services\Admin\PriceLog\Contract;
-
 
 interface PriceLogInterface
 {
